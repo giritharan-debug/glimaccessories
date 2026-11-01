@@ -21,6 +21,7 @@ import {
   checkCustomerFirstOrder,
 } from '@/lib/store';
 import { PaymentGatewayConfig, SiteSettings } from '@/types';
+import { INITIAL_SETTINGS } from '@/lib/seedData';
 
 export const CheckoutPage: React.FC = () => {
   const {
@@ -85,29 +86,12 @@ export const CheckoutPage: React.FC = () => {
     };
   }, [phone, name, items, total]);
 
-  const activeGateways: PaymentGatewayConfig[] = settings?.payment_gateways?.filter(g => g.is_enabled) || [
-    {
-      id: 'phonepe',
-      name: 'PhonePe UPI',
-      upi_id: 'glimaccessories@ybl',
-      qr_image: 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=glimaccessories@ybl&pn=Glim%20Accessories&mc=0000&mode=02&purpose=00',
-      is_enabled: true,
-    },
-    {
-      id: 'gpay',
-      name: 'Google Pay (GPay)',
-      upi_id: 'glimaccessories@okhdfcbank',
-      qr_image: 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=glimaccessories@okhdfcbank&pn=Glim%20Accessories&mc=0000&mode=02&purpose=00',
-      is_enabled: true,
-    },
-    {
-      id: 'paytm',
-      name: 'Paytm UPI',
-      upi_id: '8523996310@paytm',
-      qr_image: 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=8523996310@paytm&pn=Glim%20Accessories&mc=0000&mode=02&purpose=00',
-      is_enabled: true,
-    },
-  ];
+  const rawGateways: PaymentGatewayConfig[] = (settings?.payment_gateways && settings.payment_gateways.length > 0)
+    ? settings.payment_gateways
+    : INITIAL_SETTINGS.payment_gateways;
+
+  const enabledGateways = rawGateways.filter(g => g.is_enabled);
+  const activeGateways: PaymentGatewayConfig[] = enabledGateways.length > 0 ? enabledGateways : rawGateways;
 
   const currentGateway =
     activeGateways.find(g => g.id === selectedGateway) || activeGateways[0];
