@@ -28,6 +28,10 @@ import {
   CheckCircle,
   AlertCircle,
   Video,
+  QrCode,
+  RefreshCw,
+  Copy,
+  Save,
 } from 'lucide-react';
 import {
   Product,
@@ -39,7 +43,9 @@ import {
   Review,
   SiteSettings,
   OrderStatus,
+  PaymentGatewayConfig,
 } from '@/types';
+import { INITIAL_SETTINGS } from '@/lib/seedData';
 import {
   getProducts,
   saveProduct,
