@@ -30,27 +30,27 @@ export const Header: React.FC = () => {
     <>
       <header className="sticky top-0 z-40 bg-white/95 dark:bg-stone-900/95 backdrop-blur-md border-b border-pink-100 dark:border-stone-800 transition-colors shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
+          <div className="relative flex items-center justify-between h-16 sm:h-20">
             {/* Left: Mobile Menu & Search Icon */}
-            <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-1 sm:gap-3 z-10">
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="p-2 text-stone-700 dark:text-stone-300 hover:text-pink-600 dark:hover:text-pink-400 focus:outline-none"
+                className="p-1.5 sm:p-2 text-stone-700 dark:text-stone-300 hover:text-pink-600 dark:hover:text-pink-400 focus:outline-none"
                 aria-label="Open menu"
               >
-                <Menu className="w-6 h-6" />
+                <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
 
               <button
                 onClick={() => setSearchModalOpen(true)}
-                className="p-2 text-stone-700 dark:text-stone-300 hover:text-pink-600 dark:hover:text-pink-400 focus:outline-none"
+                className="p-1.5 sm:p-2 text-stone-700 dark:text-stone-300 hover:text-pink-600 dark:hover:text-pink-400 focus:outline-none"
                 aria-label="Search"
               >
                 <Search className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
 
               {/* Desktop Nav Links */}
-              <nav className="hidden md:flex items-center space-x-6 text-sm font-medium text-stone-700 dark:text-stone-200">
+              <nav className="hidden lg:flex items-center space-x-6 text-sm font-medium text-stone-700 dark:text-stone-200 ml-2">
                 <Link to="/products" className="hover:text-pink-600 transition-colors">
                   All Products
                 </Link>
@@ -66,45 +66,45 @@ export const Header: React.FC = () => {
               </nav>
             </div>
 
-            {/* Center: Aesthetic Logo */}
-            <div className="flex items-center justify-center text-center">
-              <Link to="/" className="group flex items-center gap-2 sm:gap-3">
+            {/* Center: Aesthetic Logo - Perfectly Centered on Mobile & Desktop */}
+            <div className="absolute inset-x-0 mx-auto flex items-center justify-center pointer-events-none px-14 sm:px-28">
+              <Link to="/" className="group flex items-center justify-center gap-1.5 sm:gap-2.5 pointer-events-auto max-w-full">
                 <img
                   src="/glim-logo.jpg"
                   alt="Glim Accessories Official Logo"
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover shadow-sm ring-2 ring-pink-200 dark:ring-pink-900/60 group-hover:scale-105 transition-all flex-shrink-0"
+                  className="w-8 h-8 sm:w-11 sm:h-11 rounded-full object-cover shadow-sm ring-1.5 ring-pink-200 dark:ring-pink-900/60 group-hover:scale-105 transition-all flex-shrink-0"
                 />
-                <div className="flex flex-col items-start text-left">
-                  <span className="font-cursive text-2xl sm:text-3xl text-pink-600 dark:text-pink-400 group-hover:text-pink-700 transition-colors tracking-wide font-bold leading-tight">
+                <div className="flex flex-col items-center sm:items-start text-center sm:text-left min-w-0">
+                  <span className="font-cursive text-xl sm:text-2xl md:text-3xl text-pink-600 dark:text-pink-400 group-hover:text-pink-700 transition-colors tracking-wide font-bold leading-none whitespace-nowrap">
                     Glim Accessories
                   </span>
-                  <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-stone-500 dark:text-stone-400 font-medium -mt-0.5">
+                  <span className="text-[7.5px] sm:text-[9.5px] uppercase tracking-widest text-stone-500 dark:text-stone-400 font-medium mt-0.5 sm:mt-1 leading-none whitespace-nowrap">
                     Aesthetic Store • Pondicherry
                   </span>
                 </div>
               </Link>
             </div>
 
-            {/* Right: Theme Toggle, Wishlist, Cart & Admin */}
-            <div className="flex items-center gap-1.5 sm:gap-3">
+            {/* Right: Theme Toggle, Wishlist, Cart */}
+            <div className="flex items-center gap-1 sm:gap-2 z-10">
               {/* Theme toggle */}
               <button
                 onClick={toggleTheme}
-                className="p-2 text-stone-600 dark:text-stone-300 hover:text-pink-600 transition-colors"
+                className="p-1.5 sm:p-2 text-stone-600 dark:text-stone-300 hover:text-pink-600 transition-colors"
                 aria-label="Toggle theme"
               >
-                {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-300" /> : <Moon className="w-5 h-5 text-stone-600" />}
+                {theme === 'dark' ? <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-stone-600" />}
               </button>
 
               {/* Wishlist */}
               <Link
                 to="/wishlist"
-                className="relative p-2 text-stone-700 dark:text-stone-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors"
+                className="relative p-1.5 sm:p-2 text-stone-700 dark:text-stone-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors"
                 aria-label="Wishlist"
               >
                 <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
                 {wishlistCount > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 text-[10px] font-bold bg-pink-500 text-white rounded-full flex items-center justify-center animate-pulse">
+                  <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-4 h-4 text-[10px] font-bold bg-pink-500 text-white rounded-full flex items-center justify-center animate-pulse">
                     {wishlistCount}
                   </span>
                 )}
@@ -113,12 +113,12 @@ export const Header: React.FC = () => {
               {/* Cart Button */}
               <button
                 onClick={() => setIsCartOpen(true)}
-                className="relative p-2 text-stone-700 dark:text-stone-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors"
+                className="relative p-1.5 sm:p-2 text-stone-700 dark:text-stone-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors"
                 aria-label="Cart"
               >
                 <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6" />
                 {totalCount > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 text-[10px] font-bold bg-pink-600 text-white rounded-full flex items-center justify-center">
+                  <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-4 h-4 text-[10px] font-bold bg-pink-600 text-white rounded-full flex items-center justify-center">
                     {totalCount}
                   </span>
                 )}
@@ -154,11 +154,16 @@ export const Header: React.FC = () => {
                   <img
                     src="/glim-logo.jpg"
                     alt="Glim Accessories"
-                    className="w-8 h-8 rounded-full object-cover ring-1 ring-pink-200"
+                    className="w-8 h-8 rounded-full object-cover ring-1 ring-pink-200 flex-shrink-0"
                   />
-                  <span className="font-cursive text-2xl text-pink-600 dark:text-pink-400 font-bold">
-                    Glim Accessories
-                  </span>
+                  <div className="flex flex-col items-start leading-none">
+                    <span className="font-cursive text-xl text-pink-600 dark:text-pink-400 font-bold">
+                      Glim Accessories
+                    </span>
+                    <span className="text-[8px] uppercase tracking-widest text-stone-400 font-medium mt-0.5">
+                      Pondicherry
+                    </span>
+                  </div>
                 </div>
 
                 <button
