@@ -128,6 +128,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
   // Upload loader
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingCategoryImg, setIsUploadingCategoryImg] = useState(false);
+  const [showCategoryUrlInput, setShowCategoryUrlInput] = useState(false);
   const [uploadingGatewayId, setUploadingGatewayId] = useState<string | null>(null);
   const [savingGateways, setSavingGateways] = useState(false);
   const [gatewaySuccessMsg, setGatewaySuccessMsg] = useState<string>('');
