@@ -45,7 +45,7 @@ export const CheckoutPage: React.FC = () => {
   const [giftNote, setGiftNote] = useState('');
 
   // Payment fields
-  const [selectedGateway, setSelectedGateway] = useState<'phonepe' | 'gpay' | 'paytm'>('phonepe');
+  const [selectedGateway, setSelectedGateway] = useState<string>('phonepe');
   const [utrNumber, setUtrNumber] = useState('');
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [screenshotPreview, setScreenshotPreview] = useState<string>('');
