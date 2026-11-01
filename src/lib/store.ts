@@ -787,14 +787,36 @@ export const getSiteSettings = async (): Promise<SiteSettings> => {
     try {
       const { data, error } = await supabase.from('site_settings').select('*').single();
       if (!error && data) {
-        setLocal(STORAGE_KEYS.SETTINGS, data);
-        return data;
+        const hasGateways = Array.isArray(data.payment_gateways) && data.payment_gateways.length > 0;
+        const normalized: SiteSettings = {
+          ...INITIAL_SETTINGS,
+          ...data,
+          payment_gateways: hasGateways ? data.payment_gateways : INITIAL_SETTINGS.payment_gateways,
+          hero_banners: (Array.isArray(data.hero_banners) && data.hero_banners.length > 0)
+            ? data.hero_banners
+            : INITIAL_SETTINGS.hero_banners,
+        };
+        // If Supabase row didn't have payment gateways, sync initial gateways
+        if (!hasGateways) {
+          try {
+            await supabase.from('site_settings').update({ payment_gateways: INITIAL_SETTINGS.payment_gateways }).eq('id', normalized.id);
+          } catch {
+            // Ignore if RLS blocks update
+          }
+        }
+        setLocal(STORAGE_KEYS.SETTINGS, normalized);
+        return normalized;
       }
     } catch (e) {
       console.warn('Site settings fallback:', e);
     }
   }
-  return getLocal<SiteSettings>(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
+  const local = getLocal<SiteSettings>(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
+  if (!Array.isArray(local.payment_gateways) || local.payment_gateways.length === 0) {
+    local.payment_gateways = INITIAL_SETTINGS.payment_gateways;
+    setLocal(STORAGE_KEYS.SETTINGS, local);
+  }
+  return local;
 };
 
 export const saveSiteSettings = async (settings: Partial<SiteSettings>): Promise<SiteSettings> => {
