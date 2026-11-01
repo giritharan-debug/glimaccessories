@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <circle cx="50" cy="50" r="48" fill="#FCE7F3" stroke="#DB2777" stroke-width="3"/>
+  <path d="M50 20 L53 38 L70 35 L56 47 L65 62 L50 52 L35 62 L44 47 L30 35 L47 38 Z" fill="#DB2777"/>
+  <circle cx="50" cy="50" r="10" fill="#FFF"/>
+  <text x="50" y="85" text-anchor="middle" font-family="serif" font-size="16" font-weight="bold" fill="#831843">GLIM</text>
+</svg>
