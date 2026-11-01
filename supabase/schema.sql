@@ -181,35 +181,26 @@ DROP POLICY IF EXISTS "Admin Full Abandoned" ON abandoned_carts;
 DROP POLICY IF EXISTS "Admin Full Notify" ON notify_requests;
 DROP POLICY IF EXISTS "Admin Full Coupons" ON coupons;
 DROP POLICY IF EXISTS "Admin Full Site Settings" ON site_settings;
+DROP POLICY IF EXISTS "Public Full Categories" ON categories;
+DROP POLICY IF EXISTS "Public Full Products" ON products;
+DROP POLICY IF EXISTS "Public Full Reviews" ON reviews;
+DROP POLICY IF EXISTS "Public Full Site Settings" ON site_settings;
+DROP POLICY IF EXISTS "Public Full Coupons" ON coupons;
+DROP POLICY IF EXISTS "Public Full Orders" ON orders;
 
 -- ========================================================
 -- CREATE CLEAN IDEMPOTENT RLS POLICIES
 -- ========================================================
 
--- Public Read
-CREATE POLICY "Public Read Categories" ON categories FOR SELECT USING (true);
-CREATE POLICY "Public Read Products" ON products FOR SELECT USING (true);
-CREATE POLICY "Public Read Reviews" ON reviews FOR SELECT USING (true);
-CREATE POLICY "Public Read Site Settings" ON site_settings FOR SELECT USING (true);
-CREATE POLICY "Public Read Coupons" ON coupons FOR SELECT USING (is_active = true);
-
--- Orders: Public can create, customers can read
-CREATE POLICY "Public Insert Orders" ON orders FOR INSERT WITH CHECK (true);
-CREATE POLICY "Customer Read Own Order" ON orders FOR SELECT USING (true);
-
--- Abandoned carts & Notify requests
+-- Store data & configuration: Full access for smooth sync
+CREATE POLICY "Public Full Categories" ON categories FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Full Products" ON products FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Full Reviews" ON reviews FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Full Site Settings" ON site_settings FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Full Coupons" ON coupons FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public Full Orders" ON orders FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Upsert Abandoned Carts" ON abandoned_carts FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Insert Notify Requests" ON notify_requests FOR INSERT WITH CHECK (true);
-
--- Authenticated Admin Access
-CREATE POLICY "Admin Full Categories" ON categories FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Full Products" ON products FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Full Reviews" ON reviews FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Full Orders" ON orders FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Full Abandoned" ON abandoned_carts FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Full Notify" ON notify_requests FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Full Coupons" ON coupons FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Full Site Settings" ON site_settings FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- ========================================================
 -- AUTOMATIC STOCK REDUCTION TRIGGER
