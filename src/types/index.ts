@@ -74,7 +74,7 @@ export interface Order {
   discount: number;
   shipping_fee: number;
   total: number;
-  payment_method: 'phonepe' | 'gpay' | 'paytm';
+  payment_method: 'phonepe' | 'gpay' | 'paytm' | string;
   upi_id: string;
   utr_number: string;
   payment_screenshot_url?: string;
