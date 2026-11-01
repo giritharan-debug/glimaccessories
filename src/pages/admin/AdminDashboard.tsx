@@ -128,6 +128,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
   // Upload loader
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadingGatewayId, setUploadingGatewayId] = useState<string | null>(null);
+  const [savingGateways, setSavingGateways] = useState(false);
+  const [gatewaySuccessMsg, setGatewaySuccessMsg] = useState<string>('');
+  const [copiedUpiGatewayId, setCopiedUpiGatewayId] = useState<string | null>(null);
 
   const loadAllAdminData = async () => {
     const [prods, cats, ords, aban, notif, cpns, revs, sett] = await Promise.all([
@@ -148,7 +152,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     setNotifyRequests(notif);
     setCoupons(cpns);
     setReviews(revs);
-    setSiteSettings(sett);
+
+    const safeSettings: SiteSettings = {
+      ...INITIAL_SETTINGS,
+      ...(sett || {}),
+      payment_gateways: (sett?.payment_gateways && Array.isArray(sett.payment_gateways) && sett.payment_gateways.length > 0)
+        ? sett.payment_gateways
+        : INITIAL_SETTINGS.payment_gateways,
+    };
+    setSiteSettings(safeSettings);
   };
 
   useEffect(() => {
