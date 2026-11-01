@@ -385,7 +385,6 @@ export const saveReview = async (review: Partial<Review> & { customer_name: stri
   }
 
   setLocal(STORAGE_KEYS.REVIEWS, reviews);
-  notifyDataChanged('reviews');
 
   const supabase = getSupabase();
   if (supabase && isSupabaseConfigured()) {
@@ -396,13 +395,13 @@ export const saveReview = async (review: Partial<Review> & { customer_name: stri
     }
   }
 
+  notifyDataChanged('reviews');
   return updatedReview;
 };
 
 export const deleteReview = async (id: string): Promise<void> => {
   const reviews = (await getReviews()).filter(r => r.id !== id);
   setLocal(STORAGE_KEYS.REVIEWS, reviews);
-  notifyDataChanged('reviews');
 
   const supabase = getSupabase();
   if (supabase && isSupabaseConfigured()) {
@@ -412,6 +411,8 @@ export const deleteReview = async (id: string): Promise<void> => {
       console.error('Supabase review delete error:', e);
     }
   }
+
+  notifyDataChanged('reviews');
 };
 
 // ==========================================
@@ -525,7 +526,6 @@ export const updateOrderStatus = async (
   };
 
   setLocal(STORAGE_KEYS.ORDERS, orders);
-  notifyDataChanged('orders');
 
   const supabase = getSupabase();
   if (supabase && isSupabaseConfigured()) {
@@ -540,6 +540,7 @@ export const updateOrderStatus = async (
     }
   }
 
+  notifyDataChanged('orders');
   return orders[index];
 };
 
