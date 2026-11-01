@@ -287,7 +287,6 @@ export const saveProduct = async (productData: Partial<Product> & { name: string
   }
 
   setLocal(STORAGE_KEYS.PRODUCTS, products);
-  notifyDataChanged('products');
 
   const supabase = getSupabase();
   if (supabase && isSupabaseConfigured()) {
@@ -298,13 +297,13 @@ export const saveProduct = async (productData: Partial<Product> & { name: string
     }
   }
 
+  notifyDataChanged('products');
   return updatedProduct;
 };
 
 export const deleteProduct = async (id: string): Promise<void> => {
   const products = (await getProducts()).filter(p => p.id !== id);
   setLocal(STORAGE_KEYS.PRODUCTS, products);
-  notifyDataChanged('products');
 
   const supabase = getSupabase();
   if (supabase && isSupabaseConfigured()) {
@@ -314,6 +313,8 @@ export const deleteProduct = async (id: string): Promise<void> => {
       console.error('Supabase product delete error:', e);
     }
   }
+
+  notifyDataChanged('products');
 };
 
 export const bulkMarkProductsSoldOut = async (productIds: string[]): Promise<void> => {
@@ -325,7 +326,6 @@ export const bulkMarkProductsSoldOut = async (productIds: string[]): Promise<voi
     }
   });
   setLocal(STORAGE_KEYS.PRODUCTS, products);
-  notifyDataChanged('products');
 
   const supabase = getSupabase();
   if (supabase && isSupabaseConfigured()) {
@@ -337,6 +337,8 @@ export const bulkMarkProductsSoldOut = async (productIds: string[]): Promise<voi
       console.error('Supabase bulk mark sold out error:', e);
     }
   }
+
+  notifyDataChanged('products');
 };
 
 // ==========================================
