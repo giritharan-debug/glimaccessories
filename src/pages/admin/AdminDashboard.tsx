@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   LayoutDashboard,
   Package,
@@ -135,7 +135,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [gatewaySuccessMsg, setGatewaySuccessMsg] = useState<string>('');
   const [copiedUpiGatewayId, setCopiedUpiGatewayId] = useState<string | null>(null);
 
-  const loadAllAdminData = async () => {
+  // Settings tab feedback
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [settingsSuccessNotice, setSettingsSuccessNotice] = useState<string>('');
+
+  const activeTabRef = useRef<TabType>(activeTab);
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
+
+  const loadAllAdminData = async (preserveSettings = false) => {
     const [prods, cats, ords, aban, notif, cpns, revs, sett] = await Promise.all([
       getProducts(),
       getCategories(),
@@ -144,7 +153,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       getNotifyRequests(),
       getCoupons(),
       getReviews(),
-      getSiteSettings(),
+      preserveSettings ? Promise.resolve(null) : getSiteSettings(),
     ]);
 
     setProducts(prods);
@@ -155,19 +164,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     setCoupons(cpns);
     setReviews(revs);
 
-    const safeSettings: SiteSettings = {
-      ...INITIAL_SETTINGS,
-      ...(sett || {}),
-      payment_gateways: (sett?.payment_gateways && Array.isArray(sett.payment_gateways) && sett.payment_gateways.length > 0)
-        ? sett.payment_gateways
-        : INITIAL_SETTINGS.payment_gateways,
-    };
-    setSiteSettings(safeSettings);
+    if (!preserveSettings && sett) {
+      const safeSettings: SiteSettings = {
+        ...INITIAL_SETTINGS,
+        ...(sett || {}),
+        payment_gateways: (sett?.payment_gateways && Array.isArray(sett.payment_gateways) && sett.payment_gateways.length > 0)
+          ? sett.payment_gateways
+          : INITIAL_SETTINGS.payment_gateways,
+      };
+      setSiteSettings(safeSettings);
+    }
   };
 
   useEffect(() => {
-    loadAllAdminData();
-    const handleDataChanged = () => loadAllAdminData();
+    loadAllAdminData(false);
+    const handleDataChanged = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const entity = customEvent.detail?.entity;
+      // If user is viewing/editing Settings or Payments, preserve siteSettings in memory
+      const isEditingSettings = activeTabRef.current === 'settings' || activeTabRef.current === 'payments';
+      loadAllAdminData(isEditingSettings && entity === 'site_settings');
+    };
     window.addEventListener('glim:data_changed', handleDataChanged);
     return () => window.removeEventListener('glim:data_changed', handleDataChanged);
   }, []);
