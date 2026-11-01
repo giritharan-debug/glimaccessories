@@ -1150,87 +1150,425 @@ Have a beautiful day! 💖`;
         {/* ======================================================== */}
         {/* TAB 7: UPI & QR SETTINGS */}
         {/* ======================================================== */}
-        {activeTab === 'payments' && siteSettings && (
-          <div className="space-y-6 animate-fadeIn max-w-4xl">
-            <div>
-              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100">
-                Payment Gateways &amp; QR Settings
-              </h1>
-              <p className="text-xs text-stone-500 mt-1">
-                Upload or replace QR codes, change UPI IDs, and enable/disable PhonePe, GPay, or Paytm separately.
-              </p>
-            </div>
+        {activeTab === 'payments' && (() => {
+          const gatewaysList: PaymentGatewayConfig[] = (siteSettings?.payment_gateways && Array.isArray(siteSettings.payment_gateways) && siteSettings.payment_gateways.length > 0)
+            ? siteSettings.payment_gateways
+            : INITIAL_SETTINGS.payment_gateways;
 
-            <div className="space-y-6">
-              {siteSettings.payment_gateways.map((gw, idx) => (
-                <div
-                  key={gw.id}
-                  className="bg-white dark:bg-stone-900 p-6 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-sm flex flex-col sm:flex-row items-center gap-6"
-                >
-                  <div className="w-32 h-32 rounded-xl border border-stone-200 p-2 bg-stone-50 flex-shrink-0 flex items-center justify-center">
-                    <img src={gw.qr_image} alt={gw.name} className="w-full h-full object-contain" />
-                  </div>
+          const handleGatewayToggle = (index: number, enabled: boolean) => {
+            const current = [...gatewaysList];
+            current[index] = { ...current[index], is_enabled: enabled };
+            if (siteSettings) setSiteSettings({ ...siteSettings, payment_gateways: current });
+            saveSiteSettings({ payment_gateways: current });
+          };
 
-                  <div className="flex-1 space-y-3 w-full">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-serif font-bold text-base text-stone-900 dark:text-stone-100">
-                        {gw.name}
-                      </h4>
-                      <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold">
-                        <input
-                          type="checkbox"
-                          checked={gw.is_enabled}
-                          onChange={e => {
-                            const updated = [...siteSettings.payment_gateways];
-                            updated[idx].is_enabled = e.target.checked;
-                            saveSiteSettings({ payment_gateways: updated });
-                          }}
-                        />
-                        <span>{gw.is_enabled ? 'Active at Checkout' : 'Disabled'}</span>
-                      </label>
-                    </div>
+          const handleGatewayUpiChange = (index: number, newUpi: string) => {
+            const current = [...gatewaysList];
+            current[index] = { ...current[index], upi_id: newUpi };
+            if (siteSettings) setSiteSettings({ ...siteSettings, payment_gateways: current });
+          };
 
-                    <div>
-                      <label className="block text-xs font-semibold text-stone-600 dark:text-stone-400 mb-1">
-                        Merchant UPI ID
-                      </label>
-                      <input
-                        type="text"
-                        value={gw.upi_id}
-                        onChange={e => {
-                          const updated = [...siteSettings.payment_gateways];
-                          updated[idx].upi_id = e.target.value;
-                          setSiteSettings(s => ({ ...s!, payment_gateways: updated }));
-                        }}
-                        onBlur={() => saveSiteSettings({ payment_gateways: siteSettings.payment_gateways })}
-                        className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-stone-300 dark:border-stone-700 bg-transparent"
-                      />
-                    </div>
+          const handleGatewayNameChange = (index: number, newName: string) => {
+            const current = [...gatewaysList];
+            current[index] = { ...current[index], name: newName };
+            if (siteSettings) setSiteSettings({ ...siteSettings, payment_gateways: current });
+          };
 
-                    <div>
-                      <label className="block text-xs font-semibold text-stone-600 dark:text-stone-400 mb-1">
-                        Replace QR Code Image
-                      </label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={async e => {
-                          if (e.target.files && e.target.files[0]) {
-                            const newQrUrl = await compressAndProcessImage(e.target.files[0]);
-                            const updated = [...siteSettings.payment_gateways];
-                            updated[idx].qr_image = newQrUrl;
-                            saveSiteSettings({ payment_gateways: updated });
-                          }
-                        }}
-                        className="text-xs text-stone-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:bg-pink-100 file:text-pink-700"
-                      />
-                    </div>
-                  </div>
+          const handleGatewayQrUpload = async (index: number, file: File) => {
+            const gwId = gatewaysList[index]?.id || String(index);
+            setUploadingGatewayId(gwId);
+            try {
+              const newQrUrl = await compressAndProcessImage(file);
+              const current = [...gatewaysList];
+              current[index] = { ...current[index], qr_image: newQrUrl };
+              if (siteSettings) setSiteSettings({ ...siteSettings, payment_gateways: current });
+              await saveSiteSettings({ payment_gateways: current });
+              setGatewaySuccessMsg(`✅ QR code for "${current[index].name}" uploaded and saved successfully!`);
+              setTimeout(() => setGatewaySuccessMsg(''), 4500);
+            } catch (err) {
+              console.error('Error uploading QR:', err);
+              alert('Failed to process image. Please try again with a valid JPG/PNG file.');
+            } finally {
+              setUploadingGatewayId(null);
+            }
+          };
+
+          const handleGenerateAutoQr = async (index: number) => {
+            const upi = gatewaysList[index]?.upi_id?.trim();
+            if (!upi) {
+              alert('Please enter a valid Merchant UPI ID first (e.g. 8523996310@paytm).');
+              return;
+            }
+            const autoQr = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`upi://pay?pa=${upi}&pn=Glim%20Accessories&mc=0000&mode=02&purpose=00`)}`;
+            const current = [...gatewaysList];
+            current[index] = { ...current[index], qr_image: autoQr };
+            if (siteSettings) setSiteSettings({ ...siteSettings, payment_gateways: current });
+            await saveSiteSettings({ payment_gateways: current });
+            setGatewaySuccessMsg(`✅ Auto-generated QR Code for "${current[index].name}" using UPI ID: ${upi}`);
+            setTimeout(() => setGatewaySuccessMsg(''), 4500);
+          };
+
+          const handleCopyUpiId = (index: number, upiId: string) => {
+            navigator.clipboard.writeText(upiId);
+            setCopiedUpiGatewayId(gatewaysList[index]?.id || String(index));
+            setTimeout(() => setCopiedUpiGatewayId(null), 2000);
+          };
+
+          const handleSaveAllPaymentGateways = async () => {
+            setSavingGateways(true);
+            try {
+              await saveSiteSettings({ payment_gateways: gatewaysList });
+              setGatewaySuccessMsg('✅ All UPI & QR settings saved successfully and live on customer checkout!');
+              setTimeout(() => setGatewaySuccessMsg(''), 5000);
+            } catch (err) {
+              console.error(err);
+              alert('Error saving payment settings. Please try again.');
+            } finally {
+              setSavingGateways(false);
+            }
+          };
+
+          const handleResetPaymentGateways = async () => {
+            if (window.confirm('Reset all payment gateways back to standard PhonePe, Google Pay and Paytm defaults?')) {
+              const defaults = [...INITIAL_SETTINGS.payment_gateways];
+              if (siteSettings) setSiteSettings({ ...siteSettings, payment_gateways: defaults });
+              await saveSiteSettings({ payment_gateways: defaults });
+              setGatewaySuccessMsg('✅ Payment gateways reset to defaults successfully!');
+              setTimeout(() => setGatewaySuccessMsg(''), 4500);
+            }
+          };
+
+          const handleAddNewGateway = () => {
+            const newId = `gateway_${Date.now()}`;
+            const newGateway: PaymentGatewayConfig = {
+              id: newId,
+              name: 'BHIM / Any UPI QR',
+              upi_id: '8523996310@paytm',
+              qr_image: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi://pay?pa=8523996310@paytm&pn=Glim%20Accessories&mc=0000&mode=02&purpose=00',
+              is_enabled: true,
+            };
+            const current = [...gatewaysList, newGateway];
+            if (siteSettings) setSiteSettings({ ...siteSettings, payment_gateways: current });
+            saveSiteSettings({ payment_gateways: current });
+            setGatewaySuccessMsg('✅ Added new payment gateway card! You can now upload your QR code image.');
+            setTimeout(() => setGatewaySuccessMsg(''), 4500);
+          };
+
+          const handleDeleteGateway = (index: number) => {
+            if (gatewaysList.length <= 1) {
+              alert('You must have at least one payment gateway configured for checkout.');
+              return;
+            }
+            if (window.confirm(`Delete payment option "${gatewaysList[index].name}"?`)) {
+              const current = [...gatewaysList];
+              current.splice(index, 1);
+              if (siteSettings) setSiteSettings({ ...siteSettings, payment_gateways: current });
+              saveSiteSettings({ payment_gateways: current });
+              setGatewaySuccessMsg('Payment gateway removed.');
+              setTimeout(() => setGatewaySuccessMsg(''), 3000);
+            }
+          };
+
+          return (
+            <div className="space-y-6 animate-fadeIn max-w-4xl">
+              {/* Top Header & Actions */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h1 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2.5">
+                    <QrCode className="w-7 h-7 text-pink-600" />
+                    <span>UPI &amp; QR Payment Settings</span>
+                  </h1>
+                  <p className="text-xs text-stone-500 mt-1">
+                    Upload your store's real PhonePe, Google Pay, or Paytm QR codes. Customers scan this QR to pay during checkout.
+                  </p>
                 </div>
-              ))}
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleResetPaymentGateways}
+                    className="px-3 py-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Reset Defaults</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleAddNewGateway}
+                    className="px-3.5 py-2 rounded-xl border border-pink-200 dark:border-pink-900 bg-pink-50 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300 hover:bg-pink-100 dark:hover:bg-pink-900/60 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add UPI Option</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSaveAllPaymentGateways}
+                    disabled={savingGateways}
+                    className="px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-700 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
+                  >
+                    {savingGateways ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Save All Changes</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Notification Banner */}
+              {gatewaySuccessMsg && (
+                <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold text-emerald-800 dark:text-emerald-200 flex items-center gap-2 animate-fadeIn shadow-sm">
+                  <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                  <span>{gatewaySuccessMsg}</span>
+                </div>
+              )}
+
+              {/* Helpful Instructions Box */}
+              <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 flex items-start gap-3 text-xs text-amber-900 dark:text-amber-200">
+                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-semibold">How to upload your store QR code:</p>
+                  <p className="text-[11px] text-amber-800/90 dark:text-amber-300/80 leading-relaxed">
+                    1. Open PhonePe, Google Pay, or Paytm on your mobile phone and take a screenshot of your personal or business QR code.<br />
+                    2. Click <strong>"Upload QR Code Image"</strong> on the matching card below and select the screenshot from your photos.<br />
+                    3. Enter your Merchant UPI ID (e.g. <code>8523996310@paytm</code> or <code>rekha@oksbi</code>) so customers can copy it if scanning fails.<br />
+                    4. Click <strong>"Save All Changes"</strong> — your new QR code will instantly appear on customer checkout!
+                  </p>
+                </div>
+              </div>
+
+              {/* Gateway Cards List */}
+              <div className="space-y-5">
+                {gatewaysList.map((gw, idx) => {
+                  const isUploadingThis = uploadingGatewayId === gw.id;
+                  const isPhonePe = gw.id.includes('phonepe') || gw.name.toLowerCase().includes('phonepe');
+                  const isGPay = gw.id.includes('gpay') || gw.name.toLowerCase().includes('google');
+                  const isPaytm = gw.id.includes('paytm') || gw.name.toLowerCase().includes('paytm');
+
+                  const badgeColor = isPhonePe
+                    ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border-purple-200'
+                    : isGPay
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border-blue-200'
+                    : isPaytm
+                    ? 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950/50 dark:text-cyan-300 border-cyan-200'
+                    : 'bg-pink-100 text-pink-700 dark:bg-pink-950/50 dark:text-pink-300 border-pink-200';
+
+                  return (
+                    <div
+                      key={gw.id || idx}
+                      className="bg-white dark:bg-stone-900 p-5 sm:p-6 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-sm transition-all hover:border-pink-200 dark:hover:border-stone-700"
+                    >
+                      {/* Gateway Card Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-stone-100 dark:border-stone-800 gap-3">
+                        <div className="flex items-center gap-3">
+                          <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg border ${badgeColor}`}>
+                            {gw.name}
+                          </span>
+
+                          <input
+                            type="text"
+                            value={gw.name}
+                            onChange={e => handleGatewayNameChange(idx, e.target.value)}
+                            onBlur={() => saveSiteSettings({ payment_gateways: gatewaysList })}
+                            className="text-sm font-semibold text-stone-800 dark:text-stone-200 bg-transparent border-b border-transparent hover:border-stone-300 focus:border-pink-500 focus:outline-none px-1"
+                            placeholder="Gateway Name"
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          {/* Active / Enabled Toggle */}
+                          <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={gw.is_enabled}
+                              onChange={e => handleGatewayToggle(idx, e.target.checked)}
+                              className="sr-only"
+                            />
+                            <div className={`w-9 h-5 flex items-center rounded-full p-0.5 transition-colors ${gw.is_enabled ? 'bg-emerald-500' : 'bg-stone-300 dark:bg-stone-700'}`}>
+                              <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${gw.is_enabled ? 'translate-x-4' : 'translate-x-0'}`} />
+                            </div>
+                            <span className={`text-xs font-semibold ${gw.is_enabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-stone-400'}`}>
+                              {gw.is_enabled ? 'Active at Checkout' : 'Disabled'}
+                            </span>
+                          </label>
+
+                          {/* Delete Gateway */}
+                          {gatewaysList.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteGateway(idx)}
+                              className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+                              title="Delete this gateway"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Gateway Card Body */}
+                      <div className="mt-5 flex flex-col md:flex-row items-center md:items-start gap-6">
+                        {/* QR Code Preview Box */}
+                        <div className="flex flex-col items-center">
+                          <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-2xl border-2 border-dashed border-pink-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/60 p-2.5 relative flex items-center justify-center overflow-hidden shadow-inner group">
+                            {gw.qr_image ? (
+                              <img
+                                src={gw.qr_image}
+                                alt={gw.name}
+                                className="w-full h-full object-contain cursor-pointer hover:scale-105 transition-transform"
+                                onClick={() => setViewingImageModal(gw.qr_image)}
+                                title="Click to enlarge QR code"
+                              />
+                            ) : (
+                              <div className="text-center p-2 text-stone-400">
+                                <QrCode className="w-10 h-10 mx-auto text-stone-300 mb-1" />
+                                <span className="text-[10px]">No QR set</span>
+                              </div>
+                            )}
+
+                            {/* Uploading Spinner Overlay */}
+                            {isUploadingThis && (
+                              <div className="absolute inset-0 bg-white/95 dark:bg-stone-900/95 flex flex-col items-center justify-center p-3 text-center z-10">
+                                <div className="w-7 h-7 border-3 border-pink-500 border-t-transparent rounded-full animate-spin mb-2" />
+                                <span className="text-[11px] font-bold text-pink-600">Uploading QR...</span>
+                                <span className="text-[9px] text-stone-400 mt-0.5">Optimizing &amp; Saving</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {gw.qr_image && (
+                            <button
+                              type="button"
+                              onClick={() => setViewingImageModal(gw.qr_image)}
+                              className="text-[10px] text-pink-600 hover:text-pink-700 font-semibold mt-2 flex items-center gap-1"
+                            >
+                              <Eye className="w-3 h-3" />
+                              <span>View Full Size</span>
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Gateway Controls */}
+                        <div className="flex-1 space-y-4 w-full">
+                          {/* File Upload Button */}
+                          <div>
+                            <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1.5">
+                              Upload QR Code Image
+                            </label>
+
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                              <label className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-pink-200 dark:border-pink-800 bg-pink-50/70 hover:bg-pink-100 dark:bg-pink-950/30 dark:hover:bg-pink-900/50 text-pink-700 dark:text-pink-300 cursor-pointer text-xs font-bold transition-all shadow-sm">
+                                <Upload className="w-4 h-4 flex-shrink-0" />
+                                <span>{isUploadingThis ? 'Processing...' : 'Upload Image File (PNG, JPG)'}</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  disabled={isUploadingThis}
+                                  className="hidden"
+                                  onChange={e => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      handleGatewayQrUpload(idx, e.target.files[0]);
+                                    }
+                                  }}
+                                />
+                              </label>
+
+                              <button
+                                type="button"
+                                onClick={() => handleGenerateAutoQr(idx)}
+                                className="px-3.5 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-sm whitespace-nowrap"
+                                title="Generate QR code automatically using the UPI ID below"
+                              >
+                                <Sparkles className="w-3.5 h-3.5 text-pink-500" />
+                                <span>Auto-Generate QR</span>
+                              </button>
+                            </div>
+                            <p className="text-[11px] text-stone-400 mt-1">
+                              Supports camera captures, phone screenshots, and scanned UPI QR codes.
+                            </p>
+                          </div>
+
+                          {/* Merchant UPI ID Input */}
+                          <div>
+                            <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1.5">
+                              Merchant UPI ID
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={gw.upi_id}
+                                placeholder="e.g. 8523996310@paytm or rekha@oksbi"
+                                onChange={e => handleGatewayUpiChange(idx, e.target.value)}
+                                onBlur={() => saveSiteSettings({ payment_gateways: gatewaysList })}
+                                className="flex-1 px-3.5 py-2 text-xs font-mono rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                              />
+
+                              <button
+                                type="button"
+                                onClick={() => handleCopyUpiId(idx, gw.upi_id)}
+                                className="px-3 py-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                                title="Copy UPI ID to test"
+                              >
+                                {copiedUpiGatewayId === (gw.id || String(idx)) ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span className="text-[11px] text-emerald-600">Copied</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3.5 h-3.5" />
+                                    <span className="text-[11px]">Copy</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                            <p className="text-[11px] text-stone-400 mt-1">
+                              Customers can click to copy this UPI ID to make payment via any UPI app.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Bottom Sticky-style Save Action */}
+              <div className="p-4 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="text-xs text-stone-500">
+                  <span className="font-semibold text-stone-800 dark:text-stone-200">Tip:</span> Any change saved here takes effect immediately for customers browsing your store!
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSaveAllPaymentGateways}
+                  disabled={savingGateways}
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-700 active:scale-95 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md"
+                >
+                  {savingGateways ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Saving Payment Settings...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Save All Payment Settings</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ======================================================== */}
         {/* TAB 8: CUSTOMER REVIEWS */}
