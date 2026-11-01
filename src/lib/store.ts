@@ -736,7 +736,6 @@ export const saveCoupon = async (coupon: Partial<Coupon> & { code: string; disco
   }
 
   setLocal(STORAGE_KEYS.COUPONS, coupons);
-  notifyDataChanged('coupons');
 
   const supabase = getSupabase();
   if (supabase && isSupabaseConfigured()) {
@@ -747,13 +746,13 @@ export const saveCoupon = async (coupon: Partial<Coupon> & { code: string; disco
     }
   }
 
+  notifyDataChanged('coupons');
   return updated;
 };
 
 export const deleteCoupon = async (id: string): Promise<void> => {
   const coupons = (await getCoupons()).filter(c => c.id !== id);
   setLocal(STORAGE_KEYS.COUPONS, coupons);
-  notifyDataChanged('coupons');
 
   const supabase = getSupabase();
   if (supabase && isSupabaseConfigured()) {
@@ -763,6 +762,8 @@ export const deleteCoupon = async (id: string): Promise<void> => {
       console.error('Supabase coupon delete error:', e);
     }
   }
+
+  notifyDataChanged('coupons');
 };
 
 // Check if customer phone has past orders (for WELCOME10 coupon)
