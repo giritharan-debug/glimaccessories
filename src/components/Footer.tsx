@@ -10,8 +10,15 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { Instagram } from '@/components/Icons';
+import { useCart } from '@/context/CartContext';
 
 export const Footer: React.FC = () => {
+  const { settings } = useCart();
+  const address = settings?.store_address || 'Romand Rolland St, opp. Dune Cafe, Pondicherry - 605001';
+  const rawNumber = settings?.whatsapp_number || '+918523996310';
+  const cleanPhone = rawNumber.replace(/\D/g, '');
+  const instagramUrl = settings?.instagram_url || 'https://instagram.com/glim_accessories_';
+  const mapsUrl = settings?.google_maps_url || 'https://maps.google.com/?q=Romand+Rolland+St,+opp.+Dune+Cafe,+Pondicherry';
   return (
     <footer className="bg-stone-900 text-stone-300 pt-14 pb-10 border-t border-stone-800 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -78,7 +85,7 @@ export const Footer: React.FC = () => {
             </p>
             <div className="flex items-center gap-3 pt-2">
               <a
-                href="https://instagram.com/glim_accessories_"
+                href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 rounded-full bg-stone-800 text-stone-300 hover:text-pink-400 hover:bg-stone-700 transition-colors"
@@ -87,7 +94,7 @@ export const Footer: React.FC = () => {
                 <Instagram className="w-4 h-4" />
               </a>
               <a
-                href="https://wa.me/918523996310"
+                href={`https://wa.me/${cleanPhone}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 rounded-full bg-[#25D366]/20 text-[#25D366] hover:bg-[#25D366]/30 transition-colors"
