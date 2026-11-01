@@ -2210,50 +2210,173 @@ Have a beautiful day! 💖`;
       {/* ======================================================== */}
       {editingCategory && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white dark:bg-stone-900 w-full max-w-md rounded-3xl p-6 space-y-4">
-            <h3 className="font-serif font-bold text-lg text-stone-900 dark:text-stone-100">
-              {editingCategory.id ? 'Edit Category' : 'Add Category'}
-            </h3>
-
-            <div>
-              <label className="block text-xs font-semibold mb-1">Category Name</label>
-              <input
-                type="text"
-                value={editingCategory.name || ''}
-                onChange={e => setEditingCategory(c => ({ ...c, name: e.target.value }))}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold mb-1">Image URL</label>
-              <input
-                type="text"
-                value={editingCategory.image || ''}
-                onChange={e => setEditingCategory(c => ({ ...c, image: e.target.value }))}
-                className="w-full px-3 py-2 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-transparent"
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
+          <div className="bg-white dark:bg-stone-900 w-full max-w-md rounded-3xl p-6 space-y-4 shadow-2xl border border-stone-200 dark:border-stone-800">
+            <div className="flex items-center justify-between pb-2 border-b border-stone-100 dark:border-stone-800">
+              <h3 className="font-serif font-bold text-lg text-stone-900 dark:text-stone-100 flex items-center gap-2">
+                <Layers className="w-5 h-5 text-pink-600" />
+                <span>{editingCategory.id ? 'Edit Category' : 'Add Category'}</span>
+              </h3>
               <button
                 type="button"
                 onClick={() => setEditingCategory(null)}
-                className="px-4 py-2 text-xs border rounded-xl"
+                className="p-1.5 rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1.5">
+                Category Name
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Anti Tarnish Chains, Korean Earrings..."
+                value={editingCategory.name || ''}
+                onChange={e => setEditingCategory(c => ({ ...c, name: e.target.value }))}
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-pink-500 font-medium"
+              />
+            </div>
+
+            {/* Direct Image Upload Section */}
+            <div>
+              <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1.5">
+                Category Image
+              </label>
+
+              {/* Uploading progress indicator */}
+              {isUploadingCategoryImg && (
+                <div className="p-3 mb-2 rounded-xl bg-pink-50 dark:bg-pink-950/40 border border-pink-200 dark:border-pink-900 flex items-center justify-center gap-2 text-xs font-semibold text-pink-600 animate-pulse">
+                  <div className="w-4 h-4 border-2 border-pink-600 border-t-transparent rounded-full animate-spin" />
+                  <span>Optimizing and uploading image from your device...</span>
+                </div>
+              )}
+
+              {editingCategory.image ? (
+                <div className="relative rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 group">
+                  <div className="h-44 w-full overflow-hidden bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
+                    <img
+                      src={editingCategory.image}
+                      alt={editingCategory.name || 'Category'}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-3">
+                    <label className="px-3.5 py-2 rounded-xl bg-white text-stone-800 text-xs font-bold shadow-lg cursor-pointer hover:bg-stone-50 flex items-center gap-1.5 transition-all">
+                      <Upload className="w-3.5 h-3.5 text-pink-600" />
+                      <span>Replace Photo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={isUploadingCategoryImg}
+                        onChange={async e => {
+                          if (e.target.files && e.target.files[0]) {
+                            setIsUploadingCategoryImg(true);
+                            try {
+                              const url = await compressAndProcessImage(e.target.files[0]);
+                              setEditingCategory(c => ({ ...c, image: url }));
+                            } catch (err) {
+                              console.error(err);
+                              alert('Failed to upload image. Please try again.');
+                            } finally {
+                              setIsUploadingCategoryImg(false);
+                            }
+                          }
+                        }}
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={() => setEditingCategory(c => ({ ...c, image: '' }))}
+                      className="px-3.5 py-2 rounded-xl bg-red-600 text-white text-xs font-bold shadow-lg hover:bg-red-700 flex items-center gap-1.5 transition-all"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Remove</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-pink-300 dark:border-pink-800/60 rounded-2xl bg-pink-50/40 dark:bg-pink-950/20 hover:bg-pink-50 dark:hover:bg-pink-900/30 cursor-pointer transition-all group text-center">
+                  <div className="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-900/50 text-pink-600 dark:text-pink-400 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                    <Upload className="w-6 h-6" />
+                  </div>
+                  <span className="text-xs font-bold text-stone-800 dark:text-stone-200">
+                    Click to upload image directly from your device
+                  </span>
+                  <span className="text-[11px] text-stone-400 mt-1">
+                    Select JPG, PNG or WEBP from phone gallery or computer
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={isUploadingCategoryImg}
+                    onChange={async e => {
+                      if (e.target.files && e.target.files[0]) {
+                        setIsUploadingCategoryImg(true);
+                        try {
+                          const url = await compressAndProcessImage(e.target.files[0]);
+                          setEditingCategory(c => ({ ...c, image: url }));
+                        } catch (err) {
+                          console.error(err);
+                          alert('Failed to upload image. Please try again.');
+                        } finally {
+                          setIsUploadingCategoryImg(false);
+                        }
+                      }
+                    }}
+                  />
+                </label>
+              )}
+
+              {/* Secondary Web URL fallback toggle */}
+              <div className="mt-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryUrlInput(v => !v)}
+                  className="text-[11px] text-stone-500 hover:text-pink-600 underline font-medium flex items-center gap-1"
+                >
+                  {showCategoryUrlInput ? 'Hide manual image URL field' : 'Or paste an Image URL manually'}
+                </button>
+
+                {showCategoryUrlInput && (
+                  <div className="mt-2 animate-fadeIn">
+                    <input
+                      type="text"
+                      placeholder="https://..."
+                      value={editingCategory.image || ''}
+                      onChange={e => setEditingCategory(c => ({ ...c, image: e.target.value }))}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-transparent font-mono"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-stone-100 dark:border-stone-800">
+              <button
+                type="button"
+                onClick={() => setEditingCategory(null)}
+                className="px-4 py-2.5 text-xs font-semibold border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-800 rounded-xl text-stone-700 dark:text-stone-300 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="button"
+                disabled={isUploadingCategoryImg || !editingCategory.name?.trim()}
                 onClick={async () => {
-                  if (editingCategory.name) {
+                  if (editingCategory.name?.trim()) {
                     await saveCategory(editingCategory as any);
                     setEditingCategory(null);
                   }
                 }}
-                className="px-4 py-2 text-xs bg-pink-600 text-white rounded-xl font-semibold"
+                className="px-5 py-2.5 text-xs bg-pink-600 hover:bg-pink-700 active:scale-95 disabled:opacity-50 text-white rounded-xl font-bold transition-all shadow-sm flex items-center gap-1.5"
               >
-                Save Category
+                <Check className="w-3.5 h-3.5" />
+                <span>Save Category</span>
               </button>
             </div>
           </div>
