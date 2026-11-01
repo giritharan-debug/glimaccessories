@@ -191,18 +191,16 @@ export const Footer: React.FC = () => {
             <div className="space-y-3 text-xs text-stone-400">
               <div className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-pink-400 flex-shrink-0 mt-0.5" />
-                <span>
-                  Romand Rolland St, opp. Dune Cafe, Pondicherry - 605001
-                </span>
+                <span>{address}</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-pink-400 flex-shrink-0" />
-                <a href="tel:+918523996310" className="hover:text-white transition-colors">
-                  +91 8523996310
+                <a href={`tel:${rawNumber}`} className="hover:text-white transition-colors">
+                  {rawNumber}
                 </a>
               </div>
               <a
-                href="https://maps.google.com/?q=Romand+Rolland+St,+opp.+Dune+Cafe,+Pondicherry"
+                href={mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs text-pink-400 hover:text-pink-300 font-semibold pt-1"
