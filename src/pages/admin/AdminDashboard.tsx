@@ -1805,137 +1805,196 @@ Have a beautiful day! 💖`;
         {/* ======================================================== */}
         {/* TAB 10: SITE & SHIPPING SETTINGS */}
         {/* ======================================================== */}
-        {activeTab === 'settings' && siteSettings && (
-          <div className="space-y-6 animate-fadeIn max-w-4xl">
-            <div>
-              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100">
-                Site &amp; Shipping Settings
-              </h1>
-              <p className="text-xs text-stone-500 mt-1">
-                Customize announcement text, free shipping threshold, address, and WhatsApp contact.
-              </p>
-            </div>
+        {activeTab === 'settings' && (() => {
+          const currentSettings = siteSettings || INITIAL_SETTINGS;
 
-            <div className="bg-white dark:bg-stone-900 p-6 sm:p-8 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-sm space-y-5">
+          const handleSaveSiteSettings = async () => {
+            setIsSavingSettings(true);
+            setSettingsSuccessNotice('');
+            try {
+              const saved = await saveSiteSettings(currentSettings);
+              setSiteSettings(saved);
+              setSettingsSuccessNotice('✅ Site and shipping settings updated live for all customers!');
+              setTimeout(() => setSettingsSuccessNotice(''), 4500);
+            } catch (err) {
+              console.error('Failed to save settings:', err);
+              alert('Failed to save settings. Please try again.');
+            } finally {
+              setIsSavingSettings(false);
+            }
+          };
+
+          return (
+            <div className="space-y-6 animate-fadeIn max-w-4xl">
               <div>
-                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                  Top Announcement Bar Text
-                </label>
-                <input
-                  type="text"
-                  value={siteSettings.announcement_bar_text}
-                  onChange={e =>
-                    setSiteSettings(s => ({ ...s!, announcement_bar_text: e.target.value }))
-                  }
-                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-transparent"
-                />
+                <h1 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2.5">
+                  <Settings className="w-7 h-7 text-pink-600" />
+                  <span>Site &amp; Shipping Settings</span>
+                </h1>
+                <p className="text-xs text-stone-500 mt-1">
+                  Customize announcement bar text, free shipping threshold, flat shipping fee, address, and WhatsApp contact. Changes reflect live on storefront.
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                    Free Shipping Threshold (₹)
-                  </label>
-                  <input
-                    type="number"
-                    value={siteSettings.free_shipping_threshold}
-                    onChange={e =>
-                      setSiteSettings(s => ({ ...s!, free_shipping_threshold: Number(e.target.value) }))
-                    }
-                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-transparent"
-                  />
-                  <p className="text-[10px] text-stone-400 mt-1">Default ₹999</p>
+              {/* Success Notification Alert */}
+              {settingsSuccessNotice && (
+                <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold text-emerald-800 dark:text-emerald-200 flex items-center gap-2 animate-fadeIn shadow-sm">
+                  <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                  <span>{settingsSuccessNotice}</span>
                 </div>
+              )}
 
+              <div className="bg-white dark:bg-stone-900 p-6 sm:p-8 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-sm space-y-5">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                    Flat Shipping Fee (₹)
-                  </label>
-                  <input
-                    type="number"
-                    value={siteSettings.flat_shipping_fee}
-                    onChange={e =>
-                      setSiteSettings(s => ({ ...s!, flat_shipping_fee: Number(e.target.value) }))
-                    }
-                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-transparent"
-                  />
-                  <p className="text-[10px] text-stone-400 mt-1">Charged when order is below threshold</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                    Store WhatsApp Number
+                  <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1.5">
+                    Top Announcement Bar Text
                   </label>
                   <input
                     type="text"
-                    value={siteSettings.whatsapp_number}
+                    value={currentSettings.announcement_bar_text}
                     onChange={e =>
-                      setSiteSettings(s => ({ ...s!, whatsapp_number: e.target.value }))
+                      setSiteSettings(s => ({ ...(s || INITIAL_SETTINGS), announcement_bar_text: e.target.value }))
                     }
-                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-transparent font-mono"
+                    placeholder="e.g. Free shipping above Rs.999 📦 | No COD • No Returns • No Refunds"
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-pink-500 font-medium"
                   />
+                  <p className="text-[11px] text-stone-400 mt-1">
+                    Appears in the running banner at the top of every page for customer announcements.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1.5">
+                      Free Shipping Threshold (₹)
+                    </label>
+                    <input
+                      type="number"
+                      value={currentSettings.free_shipping_threshold}
+                      onChange={e =>
+                        setSiteSettings(s => ({
+                          ...(s || INITIAL_SETTINGS),
+                          free_shipping_threshold: Number(e.target.value),
+                        }))
+                      }
+                      className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-pink-500 font-mono"
+                    />
+                    <p className="text-[10px] text-stone-400 mt-1">Default ₹999 — orders at or above this get free shipping</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1.5">
+                      Flat Shipping Fee (₹)
+                    </label>
+                    <input
+                      type="number"
+                      value={currentSettings.flat_shipping_fee}
+                      onChange={e =>
+                        setSiteSettings(s => ({
+                          ...(s || INITIAL_SETTINGS),
+                          flat_shipping_fee: Number(e.target.value),
+                        }))
+                      }
+                      className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-pink-500 font-mono"
+                    />
+                    <p className="text-[10px] text-stone-400 mt-1">Charged automatically when order subtotal is below the threshold</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1.5">
+                      Store WhatsApp Number
+                    </label>
+                    <input
+                      type="text"
+                      value={currentSettings.whatsapp_number}
+                      onChange={e =>
+                        setSiteSettings(s => ({ ...(s || INITIAL_SETTINGS), whatsapp_number: e.target.value }))
+                      }
+                      placeholder="+918523996310"
+                      className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-pink-500 font-mono"
+                    />
+                    <p className="text-[11px] text-stone-400 mt-1">Used for floating WhatsApp chat &amp; order updates</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1.5">
+                      Instagram Profile Link
+                    </label>
+                    <input
+                      type="text"
+                      value={currentSettings.instagram_url}
+                      onChange={e =>
+                        setSiteSettings(s => ({ ...(s || INITIAL_SETTINGS), instagram_url: e.target.value }))
+                      }
+                      placeholder="https://instagram.com/glim_accessories_"
+                      className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                    />
+                    <p className="text-[11px] text-stone-400 mt-1">Links to your Instagram page across headers &amp; footers</p>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                    Instagram Profile Link
+                  <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1.5">
+                    Physical Store Address
                   </label>
                   <input
                     type="text"
-                    value={siteSettings.instagram_url}
+                    value={currentSettings.store_address}
                     onChange={e =>
-                      setSiteSettings(s => ({ ...s!, instagram_url: e.target.value }))
+                      setSiteSettings(s => ({ ...(s || INITIAL_SETTINGS), store_address: e.target.value }))
                     }
-                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-transparent"
+                    placeholder="Romand Rolland St, opp. Dune Cafe, Pondicherry"
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-pink-500"
                   />
+                  <p className="text-[11px] text-stone-400 mt-1">Displayed in website footer &amp; contact sections</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1.5">
+                    Google Maps URL
+                  </label>
+                  <input
+                    type="text"
+                    value={currentSettings.google_maps_url}
+                    onChange={e =>
+                      setSiteSettings(s => ({ ...(s || INITIAL_SETTINGS), google_maps_url: e.target.value }))
+                    }
+                    placeholder="https://maps.google.com/?q=..."
+                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  />
+                  <p className="text-[11px] text-stone-400 mt-1">Customer map link in footer and store location card</p>
+                </div>
+
+                <div className="pt-3 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between">
+                  <span className="text-[11px] text-stone-400">
+                    Saves to database and applies live immediately.
+                  </span>
+
+                  <button
+                    type="button"
+                    disabled={isSavingSettings}
+                    onClick={handleSaveSiteSettings}
+                    className="px-6 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-700 active:scale-95 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-md flex items-center gap-2"
+                  >
+                    {isSavingSettings ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Saving Settings...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Save Settings</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                  Physical Store Address
-                </label>
-                <input
-                  type="text"
-                  value={siteSettings.store_address}
-                  onChange={e =>
-                    setSiteSettings(s => ({ ...s!, store_address: e.target.value }))
-                  }
-                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                  Google Maps URL
-                </label>
-                <input
-                  type="text"
-                  value={siteSettings.google_maps_url}
-                  onChange={e =>
-                    setSiteSettings(s => ({ ...s!, google_maps_url: e.target.value }))
-                  }
-                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-transparent"
-                />
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    saveSiteSettings(siteSettings);
-                    alert('Site settings updated live for all customers!');
-                  }}
-                  className="px-6 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-semibold text-xs transition-colors shadow-sm"
-                >
-                  Save Settings
-                </button>
-              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ======================================================== */}
         {/* TAB 11: SUPABASE STATUS & CONFIGURATION */}
