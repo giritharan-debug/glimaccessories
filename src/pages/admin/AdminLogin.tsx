@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Mail, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, Mail, ArrowRight } from 'lucide-react';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 
 interface AdminLoginProps {
@@ -7,8 +7,8 @@ interface AdminLoginProps {
 }
 
 export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
-  const [email, setEmail] = useState('admin@glimaccessories.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -18,32 +18,37 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
+      const cleanEmail = email.trim().toLowerCase();
+
+      // Check with Supabase auth if configured and matching owner
       const supabase = getSupabase();
       if (supabase && isSupabaseConfigured()) {
-        const { error: sbError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (!sbError) {
-          localStorage.setItem('glim_admin_authenticated', 'true');
-          onLoginSuccess();
-          return;
+        try {
+          const { error: sbError } = await supabase.auth.signInWithPassword({
+            email: cleanEmail,
+            password,
+          });
+          if (!sbError) {
+            localStorage.setItem('glim_admin_authenticated', 'true');
+            localStorage.setItem('glim_admin_user', cleanEmail);
+            onLoginSuccess();
+            return;
+          }
+        } catch {
+          // fall through to owner credentials check
         }
       }
 
-      // Default Admin Credential check
-      if (
-        (email === 'admin@glimaccessories.com' && password === 'admin123') ||
-        (email === 'admin@glim.com' && password === 'admin123') ||
-        (email.trim() && password.length >= 6)
-      ) {
+      // Strict check: Only store owner can log in
+      if (cleanEmail === 'rekha02prakash@gmail.com' && password === 'rekha@glim2007') {
         localStorage.setItem('glim_admin_authenticated', 'true');
+        localStorage.setItem('glim_admin_user', cleanEmail);
         onLoginSuccess();
       } else {
-        setError('Invalid admin credentials. Please try again.');
+        setError('Invalid owner credentials. Access restricted.');
       }
     } catch {
-      setError('Authentication failed.');
+      setError('Authentication failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -59,13 +64,13 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
             className="w-16 h-16 rounded-full object-cover mx-auto ring-2 ring-pink-300 dark:ring-pink-700 shadow-md"
           />
           <span className="text-[10px] uppercase font-bold tracking-widest text-pink-600 dark:text-pink-400 block pt-1">
-            Protected Staff Area
+            Store Owner Portal
           </span>
           <h2 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 dark:text-stone-100">
             Glim Admin Portal
           </h2>
           <p className="text-xs text-stone-500">
-            Sign in to manage inventory, verify UPI payments, and update live site settings.
+            Sign in to manage orders, inventory, and site settings.
           </p>
         </div>
 
@@ -78,7 +83,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-              Admin Email
+              Owner Email
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 absolute left-3.5 top-3 text-stone-400" />
@@ -87,7 +92,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="admin@glimaccessories.com"
+                placeholder="Enter owner email"
                 className="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-transparent text-stone-900 dark:text-stone-100 outline-none focus:ring-2 focus:ring-pink-500"
               />
             </div>
@@ -119,12 +124,6 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
-
-        <div className="p-3 rounded-xl bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-800 text-[11px] text-stone-500 space-y-1">
-          <p className="font-semibold text-stone-800 dark:text-stone-200">✨ Default Demo Credentials:</p>
-          <p>Email: <span className="font-mono text-pink-600">admin@glimaccessories.com</span></p>
-          <p>Password: <span className="font-mono text-pink-600">admin123</span></p>
-        </div>
       </div>
     </div>
   );

@@ -11,7 +11,6 @@ import {
   Moon,
   ChevronRight,
   ShieldCheck,
-  User,
 } from 'lucide-react';
 import { Instagram } from '@/components/Icons';
 import { useCart } from '@/context/CartContext';
@@ -124,15 +123,6 @@ export const Header: React.FC = () => {
                   </span>
                 )}
               </button>
-
-              {/* Admin Portal Shortcut */}
-              <Link
-                to="/admin"
-                className="p-2 text-stone-600 dark:text-stone-400 hover:text-pink-600 transition-colors hidden sm:block"
-                title="Admin Portal"
-              >
-                <User className="w-5 h-5" />
-              </Link>
             </div>
           </div>
         </div>
@@ -274,19 +264,6 @@ export const Header: React.FC = () => {
                   >
                     <span className="flex items-center gap-1.5">
                       <ShieldCheck className="w-4 h-4" /> No Returns / No Refunds Policy
-                    </span>
-                    <ChevronRight className="w-4 h-4 text-stone-400" />
-                  </Link>
-                </div>
-
-                <div className="py-2">
-                  <Link
-                    to="/admin"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-between py-2 text-sm text-pink-600 dark:text-pink-400 font-semibold"
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <User className="w-4 h-4" /> Admin Portal
                     </span>
                     <ChevronRight className="w-4 h-4 text-stone-400" />
                   </Link>
