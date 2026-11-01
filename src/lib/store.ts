@@ -193,7 +193,6 @@ export const saveCategory = async (category: Partial<Category> & { name: string;
   }
 
   setLocal(STORAGE_KEYS.CATEGORIES, categories);
-  notifyDataChanged('categories');
 
   const supabase = getSupabase();
   if (supabase && isSupabaseConfigured()) {
@@ -204,13 +203,13 @@ export const saveCategory = async (category: Partial<Category> & { name: string;
     }
   }
 
+  notifyDataChanged('categories');
   return updatedCategory;
 };
 
 export const deleteCategory = async (id: string): Promise<void> => {
   const categories = (await getCategories()).filter(c => c.id !== id);
   setLocal(STORAGE_KEYS.CATEGORIES, categories);
-  notifyDataChanged('categories');
 
   const supabase = getSupabase();
   if (supabase && isSupabaseConfigured()) {
@@ -220,6 +219,8 @@ export const deleteCategory = async (id: string): Promise<void> => {
       console.error('Supabase category delete error:', e);
     }
   }
+
+  notifyDataChanged('categories');
 };
 
 // ==========================================
