@@ -825,7 +825,7 @@ export const getSiteSettings = async (): Promise<SiteSettings> => {
 };
 
 export const saveSiteSettings = async (settings: Partial<SiteSettings>): Promise<SiteSettings> => {
-  const current = await getSiteSettings();
+  const current = getLocal<SiteSettings>(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
   const updated: SiteSettings = {
     ...current,
     ...settings,
@@ -833,16 +833,19 @@ export const saveSiteSettings = async (settings: Partial<SiteSettings>): Promise
   };
 
   setLocal(STORAGE_KEYS.SETTINGS, updated);
-  notifyDataChanged('site_settings');
 
   const supabase = getSupabase();
   if (supabase && isSupabaseConfigured()) {
     try {
-      await supabase.from('site_settings').upsert(updated);
+      const { error } = await supabase.from('site_settings').upsert(updated);
+      if (error) {
+        console.warn('Supabase site settings upsert error (saved in local):', error.message || error);
+      }
     } catch (e) {
       console.error('Supabase site settings upsert error:', e);
     }
   }
 
+  notifyDataChanged('site_settings');
   return updated;
 };
