@@ -121,7 +121,7 @@ export interface Coupon {
 }
 
 export interface PaymentGatewayConfig {
-  id: 'phonepe' | 'gpay' | 'paytm';
+  id: string;
   name: string;
   upi_id: string;
   qr_image: string;
