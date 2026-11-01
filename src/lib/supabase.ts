@@ -1,12 +1,15 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Read from env or local override configured by admin
+const DEFAULT_URL = 'https://pugaodnefgvptjftizhx.supabase.co';
+const DEFAULT_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1Z2FvZG5lZmd2cHRqZnRpemh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0OTY3MzIsImV4cCI6MjEwOTA3MjczMn0.JwmwbALbSmU356-bKeVQdl5Wq_ZvuOX1w6jSOOhgv1k';
+
+// Read from env, localStorage override, or default project credentials
 export const getSupabaseConfig = () => {
   const customConfig = localStorage.getItem('glim_supabase_custom_keys');
   if (customConfig) {
     try {
       const parsed = JSON.parse(customConfig);
-      if (parsed.url && parsed.anonKey) {
+      if (parsed.url && parsed.anonKey && parsed.anonKey.length > 20) {
         return { url: parsed.url, anonKey: parsed.anonKey, isCustom: true };
       }
     } catch {
@@ -14,8 +17,8 @@ export const getSupabaseConfig = () => {
     }
   }
 
-  const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
-  const envAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
+  const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL || DEFAULT_URL;
+  const envAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || DEFAULT_ANON_KEY;
 
   return {
     url: envUrl,
