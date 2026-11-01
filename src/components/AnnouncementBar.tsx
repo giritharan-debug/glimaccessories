@@ -28,6 +28,10 @@ export const AnnouncementBar: React.FC = () => {
   ];
 
   useEffect(() => {
+    setCurrentIndex(0);
+  }, [customText]);
+
+  useEffect(() => {
     const timer = setInterval(() => {
       setCurrentIndex(prev => (prev + 1) % announcements.length);
     }, 4500);
