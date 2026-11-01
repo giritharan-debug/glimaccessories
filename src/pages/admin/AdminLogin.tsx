@@ -41,6 +41,16 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
 
       // Strict check: Only store owner can log in
       if (cleanEmail === 'rekha02prakash@gmail.com' && password === 'rekha@glim2007') {
+        if (supabase && isSupabaseConfigured()) {
+          try {
+            await supabase.auth.signUp({
+              email: cleanEmail,
+              password,
+            });
+          } catch {
+            // ignore if already registered
+          }
+        }
         localStorage.setItem('glim_admin_authenticated', 'true');
         localStorage.setItem('glim_admin_user', cleanEmail);
         onLoginSuccess();
