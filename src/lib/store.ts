@@ -481,33 +481,84 @@ export const deleteReview = async (id: string): Promise<void> => {
 // ==========================================
 export const getOrders = async (): Promise<Order[]> => {
   const supabase = getSupabase();
+  const localOrders = getLocal<Order[]>(STORAGE_KEYS.ORDERS, []);
+
   if (supabase && isSupabaseConfigured()) {
     try {
       const { data, error } = await supabase
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false });
-      if (!error && data && data.length > 0) {
+
+      if (!error && Array.isArray(data)) {
+        // Auto-sync any local orders (e.g. from offline mode or previous tests) to Supabase
+        const remoteIds = new Set(data.map(o => o.id));
+        const unsynced = localOrders.filter(o => !remoteIds.has(o.id));
+
+        if (unsynced.length > 0) {
+          for (const localOrd of unsynced) {
+            try {
+              const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(localOrd.id);
+              const validUuid = isUuid ? localOrd.id : generateUUID();
+              const orderToUpload = { ...localOrd, id: validUuid };
+              const { error: syncErr } = await supabase.from('orders').insert(orderToUpload);
+              if (!syncErr) {
+                data.unshift(orderToUpload);
+                remoteIds.add(validUuid);
+              } else {
+                console.warn('Auto-sync order insert error:', syncErr.message || syncErr);
+              }
+            } catch (err) {
+              console.warn('Auto-sync local order exception:', err);
+            }
+          }
+        }
+
         setLocal(STORAGE_KEYS.ORDERS, data);
         return data;
+      } else if (error) {
+        console.warn('Supabase getOrders error:', error.message || error);
       }
     } catch (e) {
       console.warn('Orders fallback:', e);
     }
   }
-  return getLocal<Order[]>(STORAGE_KEYS.ORDERS, []);
+  return localOrders;
 };
 
 export const getOrderByIdAndPhone = async (orderIdentifier: string, phone: string): Promise<Order | undefined> => {
   const cleanPhone = phone.trim().replace(/\D/g, '').slice(-10);
-  const cleanId = orderIdentifier.trim().toLowerCase();
+  const cleanId = orderIdentifier.trim();
+
+  const supabase = getSupabase();
+  if (supabase && isSupabaseConfigured()) {
+    try {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);
+      let query = supabase.from('orders').select('*');
+      if (isUuid) {
+        query = query.or(`id.eq.${cleanId},order_number.ilike.${cleanId}`);
+      } else {
+        query = query.ilike('order_number', cleanId);
+      }
+      const { data, error } = await query;
+      if (!error && data && data.length > 0) {
+        const found = data.find(o => {
+          const oPhone = o.customer_phone.replace(/\D/g, '').slice(-10);
+          return oPhone === cleanPhone || !cleanPhone;
+        });
+        if (found) return found;
+      }
+    } catch (e) {
+      console.warn('Supabase getOrderByIdAndPhone direct query fallback:', e);
+    }
+  }
 
   const orders = await getOrders();
   return orders.find(o => {
     const oNum = o.order_number.toLowerCase();
     const oId = o.id.toLowerCase();
     const oPhone = o.customer_phone.replace(/\D/g, '').slice(-10);
-    return (oNum === cleanId || oId === cleanId) && (oPhone === cleanPhone || !phone);
+    return (oNum === cleanId.toLowerCase() || oId === cleanId.toLowerCase()) && (oPhone === cleanPhone || !cleanPhone);
   });
 };
 
@@ -536,9 +587,11 @@ export const createOrder = async (orderData: Omit<Order, 'id' | 'order_number' |
   }
   setLocal(STORAGE_KEYS.PRODUCTS, products);
 
-  // Save order locally
+  // Save order locally immediately
   const orders = await getOrders();
-  orders.unshift(newOrder);
+  if (!orders.some(o => o.id === newOrder.id)) {
+    orders.unshift(newOrder);
+  }
   setLocal(STORAGE_KEYS.ORDERS, orders);
 
   // Remove matching abandoned cart if any
@@ -547,7 +600,7 @@ export const createOrder = async (orderData: Omit<Order, 'id' | 'order_number' |
   const filteredAbandoned = abandoned.filter(a => a.phone.replace(/\D/g, '').slice(-10) !== cleanPhone);
   setLocal(STORAGE_KEYS.ABANDONED_CARTS, filteredAbandoned);
 
-  // Sync to Supabase
+  // Sync to Supabase directly
   const supabase = getSupabase();
   if (supabase && isSupabaseConfigured()) {
     try {
@@ -558,11 +611,16 @@ export const createOrder = async (orderData: Omit<Order, 'id' | 'order_number' |
       if (insertErr) {
         console.warn('Supabase createOrder insert error (retained locally):', insertErr.message || insertErr);
       }
-      // Sync reduced product stock
+      // Sync reduced product stock safely (only if valid UUID)
       for (const item of newOrder.items) {
         const prod = products.find(p => p.id === item.product_id);
-        if (prod) {
-          await supabase.from('products').update({ stock: prod.stock, is_available: prod.is_available }).eq('id', prod.id);
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(prod?.id || '');
+        if (prod && isUUID) {
+          try {
+            await supabase.from('products').update({ stock: prod.stock, is_available: prod.is_available }).eq('id', prod.id);
+          } catch {
+            // ignore non-fatal product update error
+          }
         }
       }
     } catch (e) {
@@ -623,7 +681,7 @@ export const getAbandonedCarts = async (): Promise<AbandonedCart[]> => {
         .from('abandoned_carts')
         .select('*')
         .order('created_at', { ascending: false });
-      if (!error && data && data.length > 0) {
+      if (!error && Array.isArray(data)) {
         setLocal(STORAGE_KEYS.ABANDONED_CARTS, data);
         return data;
       }
@@ -706,7 +764,7 @@ export const getNotifyRequests = async (): Promise<NotifyRequest[]> => {
         .from('notify_requests')
         .select('*')
         .order('created_at', { ascending: false });
-      if (!error && data && data.length > 0) {
+      if (!error && Array.isArray(data)) {
         setLocal(STORAGE_KEYS.NOTIFY_REQUESTS, data);
         return data;
       }

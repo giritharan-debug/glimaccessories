@@ -70,7 +70,7 @@ import {
   saveSiteSettings,
   compressAndProcessImage,
 } from '@/lib/store';
-import { getSupabaseConfig, isSupabaseConfigured } from '@/lib/supabase';
+import { getSupabase, getSupabaseConfig, isSupabaseConfigured } from '@/lib/supabase';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -138,6 +138,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   // Settings tab feedback
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const [settingsSuccessNotice, setSettingsSuccessNotice] = useState<string>('');
+  const [isRefreshingOrders, setIsRefreshingOrders] = useState(false);
 
   const activeTabRef = useRef<TabType>(activeTab);
   useEffect(() => {
@@ -186,7 +187,41 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       loadAllAdminData(isEditingSettings && entity === 'site_settings');
     };
     window.addEventListener('glim:data_changed', handleDataChanged);
-    return () => window.removeEventListener('glim:data_changed', handleDataChanged);
+
+    // 1. Supabase Realtime channel for live order updates across all devices
+    let channel: any = null;
+    const sb = getSupabase();
+    if (sb && isSupabaseConfigured()) {
+      try {
+        channel = sb
+          .channel('realtime:admin_orders')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'orders' },
+            () => {
+              const isEditingSettings = activeTabRef.current === 'settings' || activeTabRef.current === 'payments';
+              loadAllAdminData(isEditingSettings);
+            }
+          )
+          .subscribe();
+      } catch (e) {
+        console.warn('Realtime subscription error:', e);
+      }
+    }
+
+    // 2. Multi-device background poll every 10 seconds
+    const pollInterval = setInterval(() => {
+      const isEditingSettings = activeTabRef.current === 'settings' || activeTabRef.current === 'payments';
+      loadAllAdminData(isEditingSettings);
+    }, 10000);
+
+    return () => {
+      window.removeEventListener('glim:data_changed', handleDataChanged);
+      clearInterval(pollInterval);
+      if (channel && sb) {
+        sb.removeChannel(channel);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -886,6 +921,20 @@ Have a beautiful day! 💖`;
               </div>
 
               <div className="flex items-center gap-2">
+                <button
+                  onClick={async () => {
+                    setIsRefreshingOrders(true);
+                    const ords = await getOrders();
+                    setOrders(ords);
+                    setTimeout(() => setIsRefreshingOrders(false), 500);
+                  }}
+                  disabled={isRefreshingOrders}
+                  className="px-3.5 py-2 bg-pink-50 hover:bg-pink-100 text-pink-700 dark:bg-pink-950/40 dark:text-pink-300 dark:hover:bg-pink-900/50 border border-pink-200 dark:border-pink-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                  title="Force re-fetch orders directly from Supabase"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingOrders ? 'animate-spin' : ''}`} />
+                  <span>{isRefreshingOrders ? 'Syncing...' : 'Sync Orders'}</span>
+                </button>
                 <button
                   onClick={handleExportOrdersCSV}
                   className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
