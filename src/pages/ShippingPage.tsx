@@ -42,7 +42,7 @@ export const ShippingPage: React.FC = () => {
             Shipping Charges
           </h3>
           <p>
-            Orders of <strong>₹999 and above</strong> receive <strong>FREE Standard Shipping</strong> anywhere in India! For orders below ₹999, a flat subsidised fee of ₹60 is charged.
+            Orders of <strong>₹999 and above</strong> receive <strong>FREE Standard Shipping</strong> anywhere in India! For orders below ₹999, delivery within <strong>Tamil Nadu &amp; Puducherry is ₹50</strong>, and delivery to all other states across India (<strong>Out of Tamil Nadu</strong>) is <strong>₹80</strong>.
           </p>
         </section>
 
