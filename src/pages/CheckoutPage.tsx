@@ -109,6 +109,22 @@ export const CheckoutPage: React.FC = () => {
     }
   };
 
+  const handlePasteUtr = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        const cleaned = text.trim().replace(/[^a-zA-Z0-9]/g, '');
+        setUtrNumber(cleaned);
+        setCopiedFromClipboard(true);
+        setTimeout(() => setCopiedFromClipboard(false), 2000);
+      }
+    } catch {
+      // If clipboard permission is blocked, focus the input
+      const el = document.getElementById('utr-input');
+      if (el) el.focus();
+    }
+  };
+
   const handleScreenshotChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -386,9 +402,28 @@ export const CheckoutPage: React.FC = () => {
 
             {/* QR Code & UPI ID Box */}
             <div className="p-5 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-700 text-center space-y-4">
-              <p className="text-xs text-stone-600 dark:text-stone-300">
-                Scan with any UPI app (<strong>PhonePe, Google Pay, Paytm</strong>) or copy the UPI ID below:
-              </p>
+              {/* 1-Click Pay via Mobile UPI App */}
+              <div className="space-y-1.5">
+                <a
+                  href={`upi://pay?pa=${encodeURIComponent(currentGateway?.upi_id || '8523996310@paytm')}&pn=${encodeURIComponent('Glim Accessories')}&am=${total}&cu=INR&tn=${encodeURIComponent('Order Payment')}`}
+                  className="w-full sm:max-w-xs mx-auto py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 transition-all active:scale-95"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-200" />
+                  <span>⚡ Pay ₹{total} via UPI App</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                </a>
+                <p className="text-[10px] text-stone-500 dark:text-stone-400">
+                  Tap above on mobile to open PhonePe, Google Pay, or Paytm with <strong>₹{total}</strong> pre-filled!
+                </p>
+              </div>
+
+              <div className="relative flex py-1 items-center">
+                <div className="flex-grow border-t border-stone-200 dark:border-stone-700"></div>
+                <span className="flex-shrink mx-3 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                  OR SCAN QR CODE
+                </span>
+                <div className="flex-grow border-t border-stone-200 dark:border-stone-700"></div>
+              </div>
 
               {/* Dynamic QR Code */}
               <div className="inline-block p-3 bg-white rounded-2xl shadow-md border border-stone-200">
@@ -398,7 +433,7 @@ export const CheckoutPage: React.FC = () => {
                     `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=${currentGateway?.upi_id}&pn=Glim%20Accessories&am=${total}&cu=INR`
                   }
                   alt={`${currentGateway?.name} QR Code`}
-                  className="w-48 h-48 sm:w-52 sm:h-52 object-contain mx-auto"
+                  className="w-44 h-44 sm:w-48 sm:h-48 object-contain mx-auto"
                 />
                 <p className="text-[11px] text-stone-800 font-bold mt-1.5">
                   Amount to Pay: <span className="text-pink-600">₹{total}</span>
@@ -424,17 +459,50 @@ export const CheckoutPage: React.FC = () => {
             {/* Transaction Verification Inputs */}
             <div className="space-y-4 pt-2">
               <div>
-                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                  12-digit UTR / UPI Transaction Reference ID *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={utrNumber}
-                  onChange={e => setUtrNumber(e.target.value)}
-                  placeholder="e.g. 431289012345"
-                  className="w-full px-3.5 py-2.5 text-sm font-mono rounded-xl border border-stone-300 dark:border-stone-700 bg-transparent text-stone-900 dark:text-stone-100 placeholder-stone-400 outline-none focus:ring-2 focus:ring-pink-500 uppercase"
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
+                    12-digit UTR / UPI Transaction ID *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowUtrGuide(v => !v)}
+                    className="text-[10px] text-pink-600 dark:text-pink-400 hover:underline flex items-center gap-1 font-semibold"
+                  >
+                    <HelpCircle className="w-3 h-3" />
+                    <span>{showUtrGuide ? 'Hide Guide' : 'Where is my UTR?'}</span>
+                  </button>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    id="utr-input"
+                    type="text"
+                    required
+                    value={utrNumber}
+                    onChange={e => setUtrNumber(e.target.value)}
+                    placeholder="e.g. 431289012345"
+                    className="flex-1 px-3.5 py-2.5 text-sm font-mono rounded-xl border border-stone-300 dark:border-stone-700 bg-transparent text-stone-900 dark:text-stone-100 placeholder-stone-400 outline-none focus:ring-2 focus:ring-pink-500 uppercase"
+                  />
+                  <button
+                    type="button"
+                    onClick={handlePasteUtr}
+                    className="px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap shadow-sm active:scale-95"
+                    title="Paste UTR from clipboard"
+                  >
+                    <Clipboard className="w-3.5 h-3.5 text-pink-600" />
+                    <span>{copiedFromClipboard ? 'Pasted!' : 'Paste'}</span>
+                  </button>
+                </div>
+
+                {/* Where is my UTR Guide Box */}
+                {showUtrGuide && (
+                  <div className="mt-2.5 p-3 rounded-xl bg-pink-50/70 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-900/50 text-[11px] text-stone-700 dark:text-stone-300 space-y-1.5 animate-fadeIn">
+                    <p className="font-bold text-pink-700 dark:text-pink-300">Find the 12-digit number in your payment receipt:</p>
+                    <p>• <strong>PhonePe:</strong> Look for <strong>"UTR"</strong> (12 digits, e.g. <code>4310...</code>)</p>
+                    <p>• <strong>Google Pay (GPay):</strong> Look for <strong>"UPI Transaction ID"</strong> (12 digits)</p>
+                    <p>• <strong>Paytm:</strong> Look for <strong>"UPI Ref No"</strong> (12 digits)</p>
+                  </div>
+                )}
                 <p className="text-[10px] text-stone-400 mt-1">Found in your payment receipt on GPay, PhonePe, or Paytm.</p>
               </div>
 
@@ -454,6 +522,9 @@ export const CheckoutPage: React.FC = () => {
                     <img src={screenshotPreview} alt="Screenshot preview" className="w-full h-full object-cover" />
                   </div>
                 )}
+                <p className="text-[10px] text-stone-400 mt-1">
+                  Tip: You can also place the order directly and send your screenshot via WhatsApp anytime!
+                </p>
               </div>
             </div>
           </div>
