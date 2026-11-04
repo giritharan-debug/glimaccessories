@@ -158,7 +158,11 @@ export const CheckoutPage: React.FC = () => {
     try {
       let uploadedScreenshotUrl = '';
       if (screenshotFile) {
-        uploadedScreenshotUrl = await compressAndProcessImage(screenshotFile);
+        try {
+          uploadedScreenshotUrl = await compressAndProcessImage(screenshotFile);
+        } catch (imgErr) {
+          console.warn('Screenshot upload warning (continuing order creation):', imgErr);
+        }
       }
 
       const newOrder = await createOrder({
@@ -181,10 +185,22 @@ export const CheckoutPage: React.FC = () => {
       });
 
       clearCart();
-      navigate(`/order-success/${newOrder.id}`, { state: { order: newOrder } });
+
+      // Prevent DataCloneError in History.pushState by avoiding huge data URLs in state
+      const safeOrderState = {
+        ...newOrder,
+        payment_screenshot_url: newOrder.payment_screenshot_url?.startsWith('data:')
+          ? undefined
+          : newOrder.payment_screenshot_url,
+      };
+
+      navigate(`/order-success/${newOrder.id}`, { state: { order: safeOrderState } });
     } catch (err: any) {
       console.error('Error creating order:', err);
-      setErrorMessage('Something went wrong while placing your order. Please try again or message our WhatsApp support.');
+      setErrorMessage(
+        err?.message ||
+        'Something went wrong while placing your order. Please try again or message our WhatsApp support.'
+      );
       setIsSubmitting(false);
     }
   };

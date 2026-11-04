@@ -95,55 +95,116 @@ initializeStore();
 // ==========================================
 // IMAGE COMPRESSION & UPLOAD UTILITY
 // ==========================================
+export const generateUUID = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
+export const downscaleImageToBlob = async (file: File, maxDim = 1200, quality = 0.75): Promise<Blob> => {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || typeof Image === 'undefined') {
+      return resolve(file);
+    }
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            resolve(blob || file);
+          },
+          'image/jpeg',
+          quality
+        );
+      } else {
+        resolve(file);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+    img.src = url;
+  });
+};
+
 export const compressAndProcessImage = async (file: File): Promise<string> => {
+  let fileToUpload: Blob | File = file;
+
+  // 1. Downscale/compress image safely
   try {
     const options = {
       maxSizeMB: 0.8,
       maxWidthOrHeight: 1200,
-      useWebWorker: true,
+      useWebWorker: false, // Prevent WebWorker failures on mobile browsers
     };
-    const compressedFile = await imageCompression(file, options);
-
-    // If Supabase is configured and storage bucket exists, upload to bucket
-    const supabase = getSupabase();
-    if (supabase && isSupabaseConfigured()) {
-      try {
-        const fileExt = file.name.split('.').pop() || 'jpg';
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-        const filePath = `uploads/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('store-assets')
-          .upload(filePath, compressedFile);
-
-        if (!uploadError) {
-          const { data } = supabase.storage.from('store-assets').getPublicUrl(filePath);
-          if (data?.publicUrl) {
-            return data.publicUrl;
-          }
-        }
-      } catch (err) {
-        console.warn('Supabase storage upload failed, falling back to compressed DataURL', err);
-      }
+    fileToUpload = await imageCompression(file, options);
+  } catch (workerErr) {
+    console.warn('ImageCompression fallback to canvas downscale:', workerErr);
+    try {
+      fileToUpload = await downscaleImageToBlob(file, 1200, 0.75);
+    } catch {
+      fileToUpload = file;
     }
-
-    // Fallback: Convert to Base64 Data URL
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(compressedFile);
-    });
-  } catch (error) {
-    console.error('Error compressing image:', error);
-    // Return original as DataURL
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
   }
+
+  // 2. Upload to Supabase Storage if available
+  const supabase = getSupabase();
+  if (supabase && isSupabaseConfigured()) {
+    try {
+      const fileExt = file.name ? file.name.split('.').pop()?.toLowerCase() || 'jpg' : 'jpg';
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+      const filePath = `uploads/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('store-assets')
+        .upload(filePath, fileToUpload, {
+          contentType: file.type || 'image/jpeg',
+          upsert: true,
+        });
+
+      if (!uploadError) {
+        const { data } = supabase.storage.from('store-assets').getPublicUrl(filePath);
+        if (data?.publicUrl) {
+          return data.publicUrl;
+        }
+      } else {
+        console.warn('Supabase storage upload error:', uploadError.message || uploadError);
+      }
+    } catch (err) {
+      console.warn('Supabase storage upload exception:', err);
+    }
+  }
+
+  // 3. Fallback: Compact DataURL
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve((reader.result as string) || '');
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(fileToUpload);
+  });
 };
 
 // ==========================================
@@ -452,9 +513,10 @@ export const getOrderByIdAndPhone = async (orderIdentifier: string, phone: strin
 
 export const createOrder = async (orderData: Omit<Order, 'id' | 'order_number' | 'created_at' | 'updated_at' | 'status'>): Promise<Order> => {
   const orderNumber = `GLIM-${Math.floor(1000 + Math.random() * 9000)}`;
+  const orderUuid = generateUUID();
   const newOrder: Order = {
     ...orderData,
-    id: `ord-${Date.now()}`,
+    id: orderUuid,
     order_number: orderNumber,
     status: 'pending_verification',
     created_at: new Date().toISOString(),
@@ -485,16 +547,18 @@ export const createOrder = async (orderData: Omit<Order, 'id' | 'order_number' |
   const filteredAbandoned = abandoned.filter(a => a.phone.replace(/\D/g, '').slice(-10) !== cleanPhone);
   setLocal(STORAGE_KEYS.ABANDONED_CARTS, filteredAbandoned);
 
-  notifyDataChanged('orders');
-  notifyDataChanged('products');
-  notifyDataChanged('abandoned_carts');
-
   // Sync to Supabase
   const supabase = getSupabase();
   if (supabase && isSupabaseConfigured()) {
     try {
-      await supabase.from('orders').insert(newOrder);
-      // Trigger in postgres reduces stock or sync
+      const { error: insertErr } = await supabase.from('orders').insert({
+        ...newOrder,
+        id: orderUuid,
+      });
+      if (insertErr) {
+        console.warn('Supabase createOrder insert error (retained locally):', insertErr.message || insertErr);
+      }
+      // Sync reduced product stock
       for (const item of newOrder.items) {
         const prod = products.find(p => p.id === item.product_id);
         if (prod) {
@@ -502,9 +566,13 @@ export const createOrder = async (orderData: Omit<Order, 'id' | 'order_number' |
         }
       }
     } catch (e) {
-      console.error('Supabase createOrder error:', e);
+      console.warn('Supabase createOrder error:', e);
     }
   }
+
+  notifyDataChanged('orders');
+  notifyDataChanged('products');
+  notifyDataChanged('abandoned_carts');
 
   return newOrder;
 };
