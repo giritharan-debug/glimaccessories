@@ -103,6 +103,15 @@ export const CheckoutPage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
+  // Delivery Fee calculation based on State:
+  // Tamil Nadu & Puducherry: ₹50, Out of Tamil Nadu: ₹80, Free above threshold
+  const freeThreshold = settings?.free_shipping_threshold ?? 999;
+  const discountedSubtotal = subtotal - discount;
+  const isFreeShipping = discountedSubtotal >= freeThreshold && items.length > 0;
+  const isTamilNadu = /tamil\s*nadu|tamilnadu|^tn$|puducherry|pondicherry/i.test(state.trim());
+  const effectiveShippingFee = items.length === 0 || isFreeShipping ? 0 : (isTamilNadu ? 50 : 80);
+  const effectiveTotal = Math.max(0, discountedSubtotal + effectiveShippingFee);
+
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -122,13 +131,13 @@ export const CheckoutPage: React.FC = () => {
     if (phone.replace(/\D/g, '').length >= 10 && items.length > 0) {
       if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
       debounceTimeout.current = setTimeout(() => {
-        saveAbandonedCart(phone, name, items, total);
+        saveAbandonedCart(phone, name, items, effectiveTotal);
       }, 1500);
     }
     return () => {
       if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     };
-  }, [phone, name, items, total]);
+  }, [phone, name, items, effectiveTotal]);
 
   const rawGateways: PaymentGatewayConfig[] = (settings?.payment_gateways && settings.payment_gateways.length > 0)
     ? settings.payment_gateways
