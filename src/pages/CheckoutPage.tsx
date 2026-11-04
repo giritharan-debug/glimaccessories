@@ -647,19 +647,28 @@ export const CheckoutPage: React.FC = () => {
                   <span>-₹{discount}</span>
                 </div>
               )}
-              <div className="flex justify-between">
-                <span>Delivery Charges</span>
+              <div className="flex justify-between items-start">
+                <div>
+                  <span>Delivery Charges</span>
+                  <span className="block text-[10px] text-stone-400">
+                    {effectiveShippingFee === 0
+                      ? 'Free shipping applied'
+                      : isTamilNadu
+                      ? 'Tamil Nadu & Pondicherry (₹50)'
+                      : 'Out of Tamil Nadu (₹80)'}
+                  </span>
+                </div>
                 <span>
-                  {shippingFee === 0 ? (
+                  {effectiveShippingFee === 0 ? (
                     <span className="text-emerald-600 font-bold uppercase text-[11px]">Free Shipping</span>
                   ) : (
-                    `₹${shippingFee}`
+                    <span className="font-semibold text-stone-900 dark:text-stone-100">₹{effectiveShippingFee}</span>
                   )}
                 </span>
               </div>
               <div className="flex justify-between text-base font-bold text-stone-900 dark:text-stone-100 pt-2 border-t border-stone-200 dark:border-stone-800">
                 <span>Total Payable</span>
-                <span className="text-pink-600 dark:text-pink-400 text-xl">₹{total}</span>
+                <span className="text-pink-600 dark:text-pink-400 text-xl">₹{effectiveTotal}</span>
               </div>
             </div>
 
@@ -693,7 +702,7 @@ export const CheckoutPage: React.FC = () => {
               className="w-full py-4 rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-semibold text-sm tracking-wide shadow-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50"
             >
               <Lock className="w-4 h-4" />
-              <span>{isSubmitting ? 'Verifying & Submitting...' : `Place Order • ₹${total}`}</span>
+              <span>{isSubmitting ? 'Verifying & Submitting...' : `Place Order • ₹${effectiveTotal}`}</span>
             </button>
 
             <p className="text-[11px] text-center text-stone-400">

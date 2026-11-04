@@ -280,13 +280,15 @@ export const CartDrawer: React.FC = () => {
                   <span>-₹{discount}</span>
                 </div>
               )}
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span>Shipping Fee</span>
                 <span>
                   {shippingFee === 0 ? (
                     <span className="text-emerald-600 font-bold uppercase text-[11px]">Free</span>
                   ) : (
-                    `₹${shippingFee}`
+                    <span className="text-xs font-semibold text-stone-900 dark:text-stone-100">
+                      ₹50 <span className="text-[10px] font-normal text-stone-400">(TN) / ₹80 (Other)</span>
+                    </span>
                   )}
                 </span>
               </div>
