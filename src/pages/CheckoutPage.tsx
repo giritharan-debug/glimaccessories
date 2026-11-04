@@ -26,6 +26,45 @@ import {
 import { PaymentGatewayConfig, SiteSettings } from '@/types';
 import { INITIAL_SETTINGS } from '@/lib/seedData';
 
+const INDIAN_STATES = [
+  'Tamil Nadu',
+  'Puducherry',
+  'Andhra Pradesh',
+  'Karnataka',
+  'Kerala',
+  'Telangana',
+  'Maharashtra',
+  'Delhi',
+  'Gujarat',
+  'Rajasthan',
+  'Uttar Pradesh',
+  'West Bengal',
+  'Madhya Pradesh',
+  'Bihar',
+  'Punjab',
+  'Haryana',
+  'Assam',
+  'Odisha',
+  'Goa',
+  'Jammu and Kashmir',
+  'Uttarakhand',
+  'Himachal Pradesh',
+  'Jharkhand',
+  'Chhattisgarh',
+  'Chandigarh',
+  'Tripura',
+  'Manipur',
+  'Meghalaya',
+  'Nagaland',
+  'Arunachal Pradesh',
+  'Mizoram',
+  'Sikkim',
+  'Ladakh',
+  'Andaman and Nicobar Islands',
+  'Dadra and Nagar Haveli and Daman and Diu',
+  'Lakshadweep',
+];
+
 export const CheckoutPage: React.FC = () => {
   const {
     items,
