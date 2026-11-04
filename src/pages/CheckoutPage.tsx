@@ -11,6 +11,9 @@ import {
   AlertCircle,
   FileText,
   Lock,
+  ExternalLink,
+  Clipboard,
+  HelpCircle,
 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import {
@@ -50,6 +53,8 @@ export const CheckoutPage: React.FC = () => {
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [screenshotPreview, setScreenshotPreview] = useState<string>('');
   const [copiedUpi, setCopiedUpi] = useState(false);
+  const [showUtrGuide, setShowUtrGuide] = useState(false);
+  const [copiedFromClipboard, setCopiedFromClipboard] = useState(false);
 
   // Policy checkbox
   const [policyAccepted, setPolicyAccepted] = useState(false);
