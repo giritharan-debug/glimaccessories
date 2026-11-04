@@ -474,15 +474,15 @@ export const CheckoutPage: React.FC = () => {
               {/* 1-Click Pay via Mobile UPI App */}
               <div className="space-y-1.5">
                 <a
-                  href={`upi://pay?pa=${encodeURIComponent(currentGateway?.upi_id || '8523996310@paytm')}&pn=${encodeURIComponent('Glim Accessories')}&am=${total}&cu=INR&tn=${encodeURIComponent('Order Payment')}`}
+                  href={`upi://pay?pa=${encodeURIComponent(currentGateway?.upi_id || '8523996310@paytm')}&pn=${encodeURIComponent('Glim Accessories')}&am=${effectiveTotal}&cu=INR&tn=${encodeURIComponent('Order Payment')}`}
                   className="w-full sm:max-w-xs mx-auto py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 transition-all active:scale-95"
                 >
                   <Sparkles className="w-4 h-4 text-amber-200" />
-                  <span>⚡ Pay ₹{total} via UPI App</span>
+                  <span>⚡ Pay ₹{effectiveTotal} via UPI App</span>
                   <ExternalLink className="w-3.5 h-3.5 opacity-80" />
                 </a>
                 <p className="text-[10px] text-stone-500 dark:text-stone-400">
-                  Tap above on mobile to open PhonePe, Google Pay, or Paytm with <strong>₹{total}</strong> pre-filled!
+                  Tap above on mobile to open PhonePe, Google Pay, or Paytm with <strong>₹{effectiveTotal}</strong> pre-filled!
                 </p>
               </div>
 
@@ -499,13 +499,13 @@ export const CheckoutPage: React.FC = () => {
                 <img
                   src={
                     currentGateway?.qr_image ||
-                    `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=${currentGateway?.upi_id}&pn=Glim%20Accessories&am=${total}&cu=INR`
+                    `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=${currentGateway?.upi_id}&pn=Glim%20Accessories&am=${effectiveTotal}&cu=INR`
                   }
                   alt={`${currentGateway?.name} QR Code`}
                   className="w-44 h-44 sm:w-48 sm:h-48 object-contain mx-auto"
                 />
                 <p className="text-[11px] text-stone-800 font-bold mt-1.5">
-                  Amount to Pay: <span className="text-pink-600">₹{total}</span>
+                  Amount to Pay: <span className="text-pink-600">₹{effectiveTotal}</span>
                 </p>
               </div>
 
