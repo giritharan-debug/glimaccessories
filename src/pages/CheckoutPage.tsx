@@ -379,16 +379,37 @@ export const CheckoutPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                  State *
-                </label>
-                <input
-                  type="text"
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
+                    State *
+                  </label>
+                  {!isFreeShipping && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      isTamilNadu
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                        : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                    }`}>
+                      {isTamilNadu ? '⚡ ₹50 TN Delivery' : '📦 ₹80 Out of TN'}
+                    </span>
+                  )}
+                  {isFreeShipping && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                      🎉 Free Shipping
+                    </span>
+                  )}
+                </div>
+                <select
                   required
                   value={state}
                   onChange={e => setState(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-transparent text-stone-900 dark:text-stone-100 placeholder-stone-400 outline-none focus:ring-2 focus:ring-pink-500"
-                />
+                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:ring-2 focus:ring-pink-500 cursor-pointer"
+                >
+                  {INDIAN_STATES.map(s => (
+                    <option key={s} value={s}>
+                      {s} {s === 'Tamil Nadu' || s === 'Puducherry' ? '(₹50 Delivery)' : '(₹80 Delivery)'}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
