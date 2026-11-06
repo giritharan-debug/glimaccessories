@@ -29,20 +29,20 @@ import { INITIAL_SETTINGS } from '@/lib/seedData';
 const INDIAN_STATES = [
   'Tamil Nadu',
   'Puducherry',
-  'Andhra Pradesh',
   'Karnataka',
   'Kerala',
+  'Andhra Pradesh',
   'Telangana',
-  'Maharashtra',
   'Delhi',
-  'Gujarat',
-  'Rajasthan',
+  'Maharashtra',
   'Uttar Pradesh',
+  'Punjab',
+  'Haryana',
+  'Rajasthan',
+  'Gujarat',
   'West Bengal',
   'Madhya Pradesh',
   'Bihar',
-  'Punjab',
-  'Haryana',
   'Assam',
   'Odisha',
   'Goa',
@@ -64,6 +64,17 @@ const INDIAN_STATES = [
   'Dadra and Nagar Haveli and Daman and Diu',
   'Lakshadweep',
 ];
+
+export const getShippingZone = (stateName: string) => {
+  const clean = stateName.trim();
+  if (/tamil\s*nadu|tamilnadu|^tn$|puducherry|pondicherry/i.test(clean)) {
+    return { fee: 50, zone: 'Tamil Nadu & Pondicherry', badge: '⚡ ₹50 TN Delivery' };
+  }
+  if (/karnataka|kerala|andhra|telangana/i.test(clean)) {
+    return { fee: 80, zone: 'South India', badge: '📦 ₹80 South India' };
+  }
+  return { fee: 150, zone: 'North India', badge: '🚚 ₹150 North India' };
+};
 
 export const CheckoutPage: React.FC = () => {
   const {
@@ -104,12 +115,12 @@ export const CheckoutPage: React.FC = () => {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   // Delivery Fee calculation based on State:
-  // Tamil Nadu & Puducherry: ₹50, Out of Tamil Nadu: ₹80, Free above threshold
+  // Tamil Nadu & Puducherry: ₹50, South India: ₹80, North India: ₹150, Free above threshold
   const freeThreshold = settings?.free_shipping_threshold ?? 999;
   const discountedSubtotal = subtotal - discount;
   const isFreeShipping = discountedSubtotal >= freeThreshold && items.length > 0;
-  const isTamilNadu = /tamil\s*nadu|tamilnadu|^tn$|puducherry|pondicherry/i.test(state.trim());
-  const effectiveShippingFee = items.length === 0 || isFreeShipping ? 0 : (isTamilNadu ? 50 : 80);
+  const shippingZone = getShippingZone(state);
+  const effectiveShippingFee = items.length === 0 || isFreeShipping ? 0 : shippingZone.fee;
   const effectiveTotal = Math.max(0, discountedSubtotal + effectiveShippingFee);
 
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -385,11 +396,13 @@ export const CheckoutPage: React.FC = () => {
                   </label>
                   {!isFreeShipping && (
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      isTamilNadu
+                      shippingZone.fee === 50
                         ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                        : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                        : shippingZone.fee === 80
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
+                        : 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300'
                     }`}>
-                      {isTamilNadu ? '⚡ ₹50 TN Delivery' : '📦 ₹80 Out of TN'}
+                      {shippingZone.badge}
                     </span>
                   )}
                   {isFreeShipping && (
@@ -404,11 +417,14 @@ export const CheckoutPage: React.FC = () => {
                   onChange={e => setState(e.target.value)}
                   className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 outline-none focus:ring-2 focus:ring-pink-500 cursor-pointer"
                 >
-                  {INDIAN_STATES.map(s => (
-                    <option key={s} value={s}>
-                      {s} {s === 'Tamil Nadu' || s === 'Puducherry' ? '(₹50 Delivery)' : '(₹80 Delivery)'}
-                    </option>
-                  ))}
+                  {INDIAN_STATES.map(s => {
+                    const zone = getShippingZone(s);
+                    return (
+                      <option key={s} value={s}>
+                        {s} (₹{zone.fee} Delivery)
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 
