@@ -669,9 +669,7 @@ export const CheckoutPage: React.FC = () => {
                   <span className="block text-[10px] text-stone-400">
                     {effectiveShippingFee === 0
                       ? 'Free shipping applied'
-                      : isTamilNadu
-                      ? 'Tamil Nadu & Pondicherry (₹50)'
-                      : 'Out of Tamil Nadu (₹80)'}
+                      : `${shippingZone.zone} (₹${shippingZone.fee})`}
                   </span>
                 </div>
                 <span>
