@@ -287,7 +287,7 @@ export const CartDrawer: React.FC = () => {
                     <span className="text-emerald-600 font-bold uppercase text-[11px]">Free</span>
                   ) : (
                     <span className="text-xs font-semibold text-stone-900 dark:text-stone-100">
-                      ₹50 <span className="text-[10px] font-normal text-stone-400">(TN) / ₹80 (Other)</span>
+                      ₹50 <span className="text-[10px] font-normal text-stone-400">(TN) / ₹80 (South) / ₹150 (North)</span>
                     </span>
                   )}
                 </span>
