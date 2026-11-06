@@ -84,10 +84,112 @@ export const HomePage: React.FC = () => {
   const activeReviews = reviews.filter(r => !r.is_hidden);
 
   return (
-    <div className="space-y-12 sm:space-y-16 pb-16">
-      {/* 1. HERO BANNER */}
-      <section className="relative overflow-hidden bg-gradient-to-r from-pink-50 via-cream-100 to-rose-50 dark:from-stone-900 dark:via-stone-900 dark:to-stone-950 border-b border-pink-100 dark:border-stone-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 lg:py-24 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+    <div className="space-y-10 sm:space-y-14 pb-16 pt-2 sm:pt-4">
+      {/* 1. CATEGORY CIRCULAR AVATARS & CATEGORIES (At the Top) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Round Avatar Highlights: All Jewellery, Anti-Tarnish, Men's, Gifts, Korean, Hair Claws */}
+        <div className="flex items-center justify-start sm:justify-center gap-5 sm:gap-8 overflow-x-auto pb-4 pt-2 scrollbar-none">
+          {[
+            {
+              title: 'All Jewellery',
+              link: '/products',
+              img: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=300&auto=format&fit=crop&q=80',
+            },
+            {
+              title: 'Anti-Tarnish',
+              link: '/category/anti-tarnish-chains',
+              img: 'https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=300&auto=format&fit=crop&q=80',
+            },
+            {
+              title: "Men's",
+              link: '/mens',
+              img: 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=300&auto=format&fit=crop&q=80',
+            },
+            {
+              title: 'Gifts & Hampers',
+              link: '/gifts',
+              img: 'https://images.unsplash.com/photo-1513201099705-a9746e1e201f?w=300&auto=format&fit=crop&q=80',
+            },
+            {
+              title: 'Korean Style',
+              link: '/category/korean-earrings',
+              img: 'https://images.unsplash.com/photo-1588444837495-c6cfeb53f32d?w=300&auto=format&fit=crop&q=80',
+            },
+            {
+              title: 'Hair Claws',
+              link: '/category/clips',
+              img: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=300&auto=format&fit=crop&q=80',
+            },
+          ].map((item, idx) => (
+            <Link
+              key={idx}
+              to={item.link}
+              className="group flex flex-col items-center flex-shrink-0 text-center space-y-2"
+            >
+              <div className="w-18 h-18 sm:w-22 sm:h-22 md:w-24 md:h-24 rounded-full p-1 border-2 border-pink-400 dark:border-pink-500/80 transition-transform duration-300 group-hover:scale-105 shadow-sm bg-white dark:bg-stone-900">
+                <img
+                  src={item.img}
+                  alt={item.title}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=300&auto=format&fit=crop&q=80';
+                  }}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              </div>
+              <span className="font-serif text-xs sm:text-sm font-medium text-stone-800 dark:text-stone-200 group-hover:text-pink-600 transition-colors whitespace-nowrap">
+                {item.title}
+              </span>
+            </Link>
+          ))}
+        </div>
+
+        {/* Categories Section Heading */}
+        <div className="mt-8 mb-6 flex items-center justify-between">
+          <h2 className="font-serif text-2xl sm:text-3xl text-stone-900 dark:text-stone-100 font-normal">
+            Categories
+          </h2>
+          <Link
+            to="/products"
+            className="text-xs sm:text-sm font-medium text-pink-600 dark:text-pink-400 hover:underline flex items-center gap-1"
+          >
+            <span>View all 17 categories</span>
+            <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        {/* 2-Column / 4-Column Category Cards Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+          {categories.slice(0, 8).map(category => (
+            <Link
+              key={category.id}
+              to={`/category/${category.slug}`}
+              className="group relative rounded-2xl overflow-hidden bg-stone-100 dark:bg-stone-800 aspect-[4/5] flex flex-col justify-end p-4 border border-pink-100/60 dark:border-stone-800 shadow-sm hover:shadow-md transition-all duration-300"
+            >
+              <img
+                src={category.image}
+                alt={category.name}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop&q=80';
+                }}
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-stone-950/75 via-stone-950/20 to-transparent" />
+              <div className="relative z-10 flex items-center justify-between">
+                <h3 className="font-serif text-sm sm:text-base font-medium text-white group-hover:text-pink-200 transition-colors">
+                  {category.name}
+                </h3>
+                <span className="text-white group-hover:translate-x-1 transition-transform">
+                  ➔
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* 2. HERO BANNER */}
+      <section className="relative overflow-hidden bg-gradient-to-r from-pink-50 via-cream-100 to-rose-50 dark:from-stone-900 dark:via-stone-900 dark:to-stone-950 border-y border-pink-100 dark:border-stone-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-20 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div className="space-y-6 text-center lg:text-left z-10">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-pink-100 dark:bg-pink-950/80 text-pink-700 dark:text-pink-300 text-xs font-semibold uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5" />
@@ -164,102 +266,6 @@ export const HomePage: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* 2. CATEGORY CIRCULAR AVATARS & GRID (Matching Reference Screenshot) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Round Avatar Highlights (Matching Reference Screenshot: Women, Men, Gifts & Hampers, Anti-Tarnish) */}
-        <div className="flex items-center justify-start sm:justify-center gap-6 sm:gap-8 overflow-x-auto pb-6 scrollbar-none">
-          {[
-            {
-              title: 'All Jewellery',
-              link: '/products',
-              img: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=300&auto=format&fit=crop&q=80',
-            },
-            {
-              title: 'Anti-Tarnish',
-              link: '/category/anti-tarnish-chains',
-              img: 'https://images.unsplash.com/photo-1611591475155-42e472621434?w=300&auto=format&fit=crop&q=80',
-            },
-            {
-              title: "Men's",
-              link: '/mens',
-              img: 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=300&auto=format&fit=crop&q=80',
-            },
-            {
-              title: 'Gifts & Hampers',
-              link: '/gifts',
-              img: 'https://images.unsplash.com/photo-1513201099705-a9746e1e201f?w=300&auto=format&fit=crop&q=80',
-            },
-            {
-              title: 'Korean Style',
-              link: '/category/korean-earrings',
-              img: 'https://images.unsplash.com/photo-1588444837495-c6cfeb53f32d?w=300&auto=format&fit=crop&q=80',
-            },
-            {
-              title: 'Hair Claws',
-              link: '/category/clips',
-              img: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=300&auto=format&fit=crop&q=80',
-            },
-          ].map((item, idx) => (
-            <Link
-              key={idx}
-              to={item.link}
-              className="group flex flex-col items-center flex-shrink-0 text-center space-y-2"
-            >
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full p-1 border-2 border-pink-300 dark:border-pink-500/60 transition-transform duration-300 group-hover:scale-105 shadow-sm">
-                <img
-                  src={item.img}
-                  alt={item.title}
-                  className="w-full h-full object-cover rounded-full"
-                />
-              </div>
-              <span className="font-serif text-xs sm:text-sm font-medium text-stone-800 dark:text-stone-200 group-hover:text-pink-600 transition-colors whitespace-nowrap">
-                {item.title}
-              </span>
-            </Link>
-          ))}
-        </div>
-
-        {/* Categories Section Heading matching reference */}
-        <div className="mt-8 mb-6 flex items-center justify-between">
-          <h2 className="font-serif text-2xl sm:text-3xl text-stone-900 dark:text-stone-100 font-normal">
-            Categories
-          </h2>
-          <Link
-            to="/products"
-            className="text-xs sm:text-sm font-medium text-pink-600 dark:text-pink-400 hover:underline flex items-center gap-1"
-          >
-            <span>View all 17 categories</span>
-            <ChevronRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        {/* 2-Column Category Cards Grid (Matching Reference Screenshot e.g. Claws ->, Tops ->) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-          {categories.slice(0, 8).map(category => (
-            <Link
-              key={category.id}
-              to={`/category/${category.slug}`}
-              className="group relative rounded-2xl overflow-hidden bg-stone-100 dark:bg-stone-800 aspect-[4/5] flex flex-col justify-end p-4 border border-pink-100/60 dark:border-stone-800 shadow-sm hover:shadow-md transition-all duration-300"
-            >
-              <img
-                src={category.image}
-                alt={category.name}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-stone-950/75 via-stone-950/20 to-transparent" />
-              <div className="relative z-10 flex items-center justify-between">
-                <h3 className="font-serif text-sm sm:text-base font-medium text-white group-hover:text-pink-200 transition-colors">
-                  {category.name}
-                </h3>
-                <span className="text-white group-hover:translate-x-1 transition-transform">
-                  ➔
-                </span>
-              </div>
-            </Link>
-          ))}
         </div>
       </section>
 
