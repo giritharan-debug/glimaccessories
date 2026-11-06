@@ -1947,7 +1947,7 @@ Have a beautiful day! 💖`;
                       className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-pink-500 font-mono"
                     />
                     <p className="text-[10px] text-stone-400 mt-1">
-                      Active rates: <strong>₹50</strong> for Tamil Nadu &amp; Pondicherry • <strong>₹80</strong> for Out of Tamil Nadu
+                      Active rates: <strong>₹50</strong> for Tamil Nadu &amp; Pondicherry • <strong>₹80</strong> for South India • <strong>₹150</strong> for North India
                     </p>
                   </div>
                 </div>
